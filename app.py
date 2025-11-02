@@ -37,7 +37,8 @@ def get_masoretic_text(reference):
 st.set_page_config(page_title="Proto-Vorlage AI", layout="centered")
 st.title("Proto-Vorlage AI")
 st.markdown(
-    "Enter any verse from Genesis 1:1 to Malachi 4:6. This version displays Masoretic Hebrew and English from Sefaria."
+    "Enter any verse from Genesis 1:1 to Malachi 4:6. This version displays Masoretic Hebrew and English from Sefaria, "
+    "and shows Greek (LXX) and Latin (Vulgate) with English translations."
 )
 
 # User input
@@ -50,8 +51,18 @@ if user_input:
         hebrew_text = masoretic["original"]
         english_text = masoretic["english"]
 
-    # Column layout
-    st.subheader("Masoretic Text (Live from Sefaria)")
+    # === Static demo content for LXX and Vulgate ===
+    reference = user_input.strip().title()
+
+    # Placeholder Septuagint Greek and English
+    lxx_greek = "ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν" if reference == "Genesis 1:1" else "[Greek coming soon]"
+    lxx_english = "In the beginning God made the heaven and the earth" if reference == "Genesis 1:1" else "[English coming soon]"
+
+    # Placeholder Latin Vulgate and English
+    vulgate_latin = "In principio creavit Deus caelum et terram" if reference == "Genesis 1:1" else "[Latin coming soon]"
+    vulgate_english = "In the beginning God created the heaven and the earth" if reference == "Genesis 1:1" else "[English coming soon]"
+
+    # === Display in columns ===
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -66,10 +77,10 @@ if user_input:
 
     with col3:
         st.subheader("LXX")
-        st.markdown("**Greek:** *(Coming Soon)*")
-        st.markdown("**English:** *(Coming Soon)*")
+        st.markdown(f"**Greek:** {lxx_greek}")
+        st.markdown(f"**English:** {lxx_english}")
 
     with col4:
         st.subheader("Vulgate")
-        st.markdown("**Latin:** *(Coming Soon)*")
-        st.markdown("**English:** *(Coming Soon)*")
+        st.markdown(f"**Latin:** {vulgate_latin}")
+        st.markdown(f"**English:** {vulgate_english}")
