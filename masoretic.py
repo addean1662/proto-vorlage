@@ -1,7 +1,14 @@
 # Masoretic Text agent logic
-def get_mt_text(verse):
-    data = {
-        "Isaiah 7:14": "הִנֵּה הָעַלְמָה הָרָה וְיֹלֶדֶת בֵּן",
-        "Psalm 22:16": "כָּאֲרִי יָדַי וְרַגְלָי"
-    }
-    return data.get(verse, "[Verse not available]")
+import requests
+
+def get_mt_text(reference):
+    try:
+        ref = reference.replace(" ", ".").replace(":", ".")
+        url = f"https://www.sefaria.org/api/texts/{ref}?lang=he"
+        response = requests.get(url)
+        data = response.json()
+        hebrew = data.get("he", ["[Hebrew not found]"])[0]
+        english = data.get("text", ["[English not found]"])[0]
+        return f"**Hebrew**: {hebrew}\n\n**English**: {english}"
+    except Exception as e:
+        return f"[Error: {str(e)}]"
