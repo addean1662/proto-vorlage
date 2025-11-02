@@ -1,64 +1,72 @@
-# Streamlit app entry point
-# app.py
+# app.py — Proto-Vorlage AI Streamlit app
+
 import streamlit as st
 from masoretic import get_masoretic_text
 from lxx import get_lxx_text
-from vulgate import get_vulgate_text
+from vulgate import get_vulgate_text   # assuming similar structure
 
-st.set_page_config(page_title="Proto-Vorlage AI", layout="wide")
+st.set_page_config(page_title="Proto-Vorlage AI", layout="centered")
 
-# ===== Page Header =====
+# ===============================
+# UI — HEADER + DESCRIPTION
+# ===============================
+
 st.title("Proto-Vorlage AI")
 st.markdown(
     """
-    Enter any verse from *Genesis 1:1* to *Malachi 4:6*.
-    <br>This app displays:
-    - **Masoretic**: Hebrew + English (via Sefaria API)
-    - **LXX (Septuagint)**: Greek + English (Brenton)
-    - **Vulgate**: Latin + English (Challoner)
-    """,
-    unsafe_allow_html=True
+    Compare Old Testament textual traditions with smart verse lookup.  
+    Enter a full verse reference (e.g. `Genesis 1:1`), and this app displays:
+
+    - ✅ Masoretic Hebrew + English (via Sefaria.org)  
+    - ✅ Septuagint Greek + English (via BibleHub)  
+    - ✅ Latin Vulgate + English (placeholder for now)  
+    - 🕒 Dead Sea Scrolls integration coming soon
+    """
 )
 
-# ===== User Input =====
-user_input = st.text_input("Enter a verse (e.g., 'Genesis 1:1')")
+# ===============================
+# USER INPUT
+# ===============================
 
-if user_input:
-    # 4 columns for the 4 textual traditions
+reference = st.text_input("Enter a verse reference (e.g. 'Genesis 1:1')")
+
+if reference:
+    # Create columns for each source
     col1, col2, col3, col4 = st.columns(4)
 
-    # ===== Masoretic =====
+    # === MASORETIC ===
+    with st.spinner("Loading Masoretic Text..."):
+        masoretic = get_masoretic_text(reference.strip().title())
+
     with col1:
         st.subheader("Masoretic")
-        with st.spinner("Loading Masoretic text..."):
-            masoretic = get_masoretic_text(user_input.strip())
-
-        st.markdown(f"**Hebrew:**<br>{masoretic['original']}", unsafe_allow_html=True)
-        st.markdown(f"**English:**<br>{masoretic['english']}", unsafe_allow_html=True)
+        st.markdown(f"**Hebrew:** {masoretic['original']}", unsafe_allow_html=True)
+        st.markdown(f"**English:** {masoretic['english']}")
         st.caption(masoretic.get("notes", ""))
 
-    # ===== DSS (Placeholder) =====
+    # === DSS PLACEHOLDER ===
     with col2:
-        st.subheader("DSS (Coming Soon)")
-        st.markdown("**Hebrew:**<br>*Coming Soon*", unsafe_allow_html=True)
-        st.markdown("**English:**<br>*Coming Soon*", unsafe_allow_html=True)
+        st.subheader("DSS")
+        st.markdown("**Hebrew:** *(Coming Soon)*")
+        st.markdown("**English:** *(Coming Soon)*")
+        st.caption("Dead Sea Scrolls integration planned.")
 
-    # ===== LXX =====
+    # === SEPTUAGINT (LXX) ===
+    with st.spinner("Loading LXX..."):
+        lxx = get_lxx_text(reference.strip())
+
     with col3:
         st.subheader("LXX")
-        with st.spinner("Loading Septuagint (LXX)..."):
-            lxx = get_lxx_text(user_input.strip())
-
-        st.markdown(f"**Greek:**<br>{lxx['original']}", unsafe_allow_html=True)
-        st.markdown(f"**English:**<br>{lxx['english']}", unsafe_allow_html=True)
+        st.markdown(f"**Greek:** {lxx['original']}")
+        st.markdown(f"**English:** {lxx['english']}")
         st.caption(lxx.get("notes", ""))
 
-    # ===== Vulgate =====
+    # === VULGATE ===
+    with st.spinner("Loading Vulgate..."):
+        vulgate = get_vulgate_text(reference.strip())
+
     with col4:
         st.subheader("Vulgate")
-        with st.spinner("Loading Vulgate text..."):
-            vulgate = get_vulgate_text(user_input.strip())
-
-        st.markdown(f"**Latin:**<br>{vulgate['original']}", unsafe_allow_html=True)
-        st.markdown(f"**English:**<br>{vulgate['english']}", unsafe_allow_html=True)
+        st.markdown(f"**Latin:** {vulgate['original']}")
+        st.markdown(f"**English:** {vulgate['english']}")
         st.caption(vulgate.get("notes", ""))
