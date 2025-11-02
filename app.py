@@ -1,50 +1,59 @@
 # Streamlit app entry point
 import streamlit as st
+import requests
+import re
 
-# Sample verse data (expand this dictionary later!)
-verse_data = {
-    "Psalm 22:16": {
-        "Masoretic": {
-            "he": "כִּי סְבָבוּנִי כְּלָבִים עֲדַת מְרֵעִים הִקִּיפוּנִי כָּאֲרִי יָדַי וְרַגְלָי׃",
-            "en": "For dogs surround me; a pack of evildoers closes in on me. Like a lion, they are at my hands and feet."
-        },
-        "DSS": {
-            "he": "כארו ידי ורגלי",
-            "en": "They pierced my hands and my feet"
-        },
-        "LXX": {
-            "he": "ὤρυξαν χεῖράς μου καὶ πόδας",
-            "en": "They dug my hands and feet"
-        },
-        "Vulgate": {
-            "he": "foderunt manus meas et pedes meos",
-            "en": "They pierced my hands and my feet"
+# === Masoretic API Lookup (Sefaria) ===
+
+def clean_html(raw_html):
+    cleanr = re.compile('<.*?>')
+    return re.sub(cleanr, '', raw_html)
+
+def get_masoretic_text(reference):
+    try:
+        ref = reference.strip().replace(" ", "_").replace(":", ".")
+        url = f"https://www.sefaria.org/api/texts/{ref}?lang=he&with_heb=true"
+        response = requests.get(url)
+        data = response.json()
+
+        hebrew = data.get("he", ["[Hebrew not found]"])[0]
+        english_raw = data.get("text", ["[English not found]"])[0]
+        english = clean_html(english_raw)
+
+        return {
+            "original": hebrew,
+            "english": english,
+            "notes": "Source: Sefaria.org (Masoretic Text)"
         }
-    }
-}
+    except Exception as e:
+        return {
+            "original": "[Error retrieving Hebrew]",
+            "english": "[Error retrieving English]",
+            "notes": str(e)
+        }
 
-# App interface
+# === Streamlit UI ===
+
 st.set_page_config(page_title="Proto-Vorlage AI", layout="centered")
 st.title("Proto-Vorlage AI")
-st.markdown("Select a verse to compare how it's preserved in different textual traditions of the Hebrew Bible.")
+st.markdown("Enter any verse from Genesis 1:1 to Malachi 4:6. This version displays Masoretic Hebrew and English from Sefaria.")
 
-# Input box for Book + Chapter:Verse
-verse_input = st.text_input("Enter a verse (e.g., 'Psalm 22:16')")
+# User Input
+user_input = st.text_input("Enter a verse (e.g., 'Isaiah 7:14')")
 
 # Normalize input
-normalized_input = verse_input.strip().title()
+if user_input:
+    with st.spinner("Retrieving Masoretic text..."):
+        masoretic = get_masoretic_text(user_input.strip().title())
 
-# Display results if verse found
-if normalized_input in verse_data:
-    verse = verse_data[normalized_input]
-    
-    cols = st.columns(4)
-    for idx, (tradition, texts) in enumerate(verse.items()):
-        with cols[idx]:
-            st.subheader(tradition)
-            st.markdown(f"**Hebrew:** {texts['he']}")
-            st.markdown(f"**English:** {texts['en']}")
-else:
-    if verse_input:
-        st.warning("Verse not found. Try another.")
+    st.subheader("Masoretic Text (Live from Sefaria)")
+    st.markdown(f"**Hebrew:** {masoretic['original']}")
+    st.markdown(f"**English:** {masoretic['english']}")
+    st.caption(masoretic['notes'])
 
+    # === Placeholders for Other Traditions ===
+    st.divider()
+    st.subheader("Coming Soon: AI Reconstructions")
+    st.markdown("🔸 **DSS**: Reconstructed Hebrew fragment + English interpretation")
+    st.markdown("🔸 **LXX**: Retroverted Hebrew from Greek + English gloss")
+    st.markdown("🔸 **Vulgate**: Retroverted Hebrew from Latin + English gloss")
