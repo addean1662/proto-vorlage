@@ -1,4 +1,3 @@
-# Septuagint agent logic with backtranslation
 # lxx.py
 
 import requests
