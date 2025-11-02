@@ -28,3 +28,13 @@ def get_masoretic_text(reference):
             "english": "[Error retrieving English]",
             "notes": str(e)
         }
+from lxx import get_lxx_retroversion
+
+# Inside your app logic
+if user_input:
+    lxx_result = get_lxx_retroversion(user_input.strip().title())
+
+    st.subheader("Septuagint (Retroversion)")
+    st.markdown(f"**Greek:** {lxx_result['greek']}")
+    st.markdown(f"**Retroversion + Gloss:**\n\n{lxx_result['hebrew_english_output']}")
+    st.caption(lxx_result['notes'])
