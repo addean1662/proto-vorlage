@@ -16,7 +16,8 @@ def get_masoretic_text(reference):
         response = requests.get(url)
         data = response.json()
 
-        hebrew = data.get("he", ["[Hebrew not found]"])[0]
+        hebrew_raw = data.get("he", ["[Hebrew not found]"])[0]
+        hebrew = clean_html(hebrew_raw)
         english_raw = data.get("text", ["[English not found]"])[0]
         english = clean_html(english_raw)
 
