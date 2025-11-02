@@ -48,13 +48,26 @@ if user_input:
         masoretic = get_masoretic_text(user_input.strip().title())
 
     st.subheader("Masoretic Text (Live from Sefaria)")
-    st.markdown(f"**Hebrew:** {masoretic['original']}")
-    st.markdown(f"**English:** {masoretic['english']}")
-    st.caption(masoretic['notes'])
+   st.markdown("---")
+col1, col2, col3, col4 = st.columns(4)
 
-    # === Placeholders for Other Traditions ===
-    st.divider()
-    st.subheader("Coming Soon: AI Reconstructions")
-    st.markdown("🔸 **DSS**: Reconstructed Hebrew fragment + English interpretation")
-    st.markdown("🔸 **LXX**: Retroverted Hebrew from Greek + English gloss")
-    st.markdown("🔸 **Vulgate**: Retroverted Hebrew from Latin + English gloss")
+with col1:
+    st.subheader("Masoretic")
+    st.markdown(f"**Hebrew:** {hebrew_text}", unsafe_allow_html=True)
+    st.markdown(f"**English:** {english_text}")
+
+with col2:
+    st.subheader("DSS")
+    st.markdown("**Hebrew:** *(Coming Soon)*")
+    st.markdown("**English:** *(Coming Soon)*")
+
+with col3:
+    st.subheader("LXX")
+    st.markdown("**Greek:** *(Coming Soon)*")
+    st.markdown("**English:** *(Coming Soon)*")
+
+with col4:
+    st.subheader("Vulgate")
+    st.markdown("**Latin:** *(Coming Soon)*")
+    st.markdown("**English:** *(Coming Soon)*")
+
