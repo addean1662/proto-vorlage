@@ -1,25 +1,22 @@
 # Masoretic Text agent logic
 import requests
-import re
+from html import unescape
 
-def clean_html(raw_html):
-    cleanr = re.compile('<.*?>')
-    return re.sub(cleanr, '', raw_html)
+def clean_html(text):
+    return unescape(text).replace("<br>", "").replace("<i>", "").replace("</i>", "").strip()
 
 def get_masoretic_text(reference):
     try:
-        ref = reference.strip().replace(" ", "_").replace(":", ".")
-        url = f"https://www.sefaria.org/api/texts/{ref}?lang=he&with_heb=true"
+        url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
         response = requests.get(url)
         data = response.json()
 
-        hebrew = data.get("he", ["[Hebrew not found]"])[0]
+        hebrew_raw = data.get("he", ["[Hebrew not found]"])[0]
         english_raw = data.get("text", ["[English not found]"])[0]
-        english = clean_html(english_raw)
 
         return {
-            "original": hebrew,
-            "english": english,
+            "original": clean_html(hebrew_raw),
+            "english": clean_html(english_raw),
             "notes": "Source: Sefaria.org (Masoretic Text)"
         }
     except Exception as e:
@@ -28,13 +25,3 @@ def get_masoretic_text(reference):
             "english": "[Error retrieving English]",
             "notes": str(e)
         }
-from lxx import get_lxx_retroversion
-
-# Inside your app logic
-if user_input:
-    lxx_result = get_lxx_retroversion(user_input.strip().title())
-
-    st.subheader("Septuagint (Retroversion)")
-    st.markdown(f"**Greek:** {lxx_result['greek']}")
-    st.markdown(f"**Retroversion + Gloss:**\n\n{lxx_result['hebrew_english_output']}")
-    st.caption(lxx_result['notes'])
