@@ -4,43 +4,76 @@ from masoretic import get_masoretic_text
 from lxx import get_lxx_text
 from vulgate import get_vulgate_text
 
-st.set_page_config(page_title="Proto-Vorlage AI", layout="centered")
-
+# === Streamlit App Config ===
+st.set_page_config(page_title="Proto-Vorlage AI", layout="wide")
 st.title("Proto-Vorlage AI")
 st.markdown(
-    "Enter any verse from Genesis 1:1 to Malachi 4:6. This version displays Masoretic Hebrew and English from Sefaria, and shows Greek (LXX) and Latin (Vulgate) with English translations."
+    """
+This app allows you to enter a verse from the Hebrew Bible (Gen 1:1 – Mal 4:6), and displays:
+- **Masoretic Text** (Hebrew + English translation via Sefaria)
+- **Septuagint (LXX)** (Greek + English Brenton)
+- **Vulgate** (Latin + English Challoner)
+- **Dead Sea Scrolls** *(coming soon)*
+
+Example input: `Isaiah 7:14`
+"""
 )
 
-user_input = st.text_input("Enter a verse (e.g., 'Isaiah 7:14')")
+# === User Input ===
+user_input = st.text_input("Enter a verse reference (e.g., 'Genesis 1:1')")
+
+def render_text_block(title, original, english, notes=None):
+    st.subheader(title)
+    st.markdown(f"**Original:**<br>{original}", unsafe_allow_html=True)
+    st.markdown(f"**English:**<br>{english}", unsafe_allow_html=True)
+    if notes:
+        st.caption(notes)
 
 if user_input:
+    verse_ref = user_input.strip().title()
+
+    # === 4 content columns ===
     col1, col2, col3, col4 = st.columns(4)
 
-    # === Masoretic ===
-    with st.spinner("Loading Masoretic text..."):
-        masoretic = get_masoretic_text(user_input.strip().title())
-
+    # === Masoretic Text ===
     with col1:
-        st.subheader("Masoretic")
-        st.markdown(f"**Hebrew:** {masoretic['original']}", unsafe_allow_html=True)
-        st.markdown(f"**English:** {masoretic['english']}")
+        with st.spinner("Loading Masoretic Text..."):
+            masoretic = get_masoretic_text(verse_ref)
+        render_text_block(
+            "Masoretic",
+            masoretic.get("original", "[Error]"),
+            masoretic.get("english", "[Error]"),
+            masoretic.get("notes"),
+        )
 
-    # === DSS (Coming Soon) ===
+    # === Dead Sea Scrolls Placeholder ===
     with col2:
-        st.subheader("DSS")
-        st.markdown("**Hebrew:** *(Coming Soon)*")
-        st.markdown("**English:** *(Coming Soon)*")
+        render_text_block(
+            "Dead Sea Scrolls",
+            "*Coming soon (AI-driven fragment finder)*",
+            "*Coming soon (AI-driven fragment finder)*",
+        )
 
-    # === LXX ===
+    # === Septuagint (LXX) ===
     with col3:
-        st.subheader("LXX")
-        lxx = get_lxx_text(user_input.strip().title())
-        st.markdown(f"**Greek:** {lxx['original']}")
-        st.markdown(f"**English:** {lxx['english']}")
+        with st.spinner("Loading Septuagint (LXX)..."):
+            lxx = get_lxx_text(verse_ref)
+        render_text_block(
+            "Septuagint (LXX)",
+            lxx.get("original", "[Error]"),
+            lxx.get("english", "[Error]"),
+            lxx.get("notes"),
+        )
 
     # === Vulgate ===
     with col4:
-        st.subheader("Vulgate")
-        vulgate = get_vulgate_text(user_input.strip().title())
-        st.markdown(f"**Latin:** {vulgate['original']}")
-        st.markdown(f"**English:** {vulgate['english']}")
+        with st.spinner("Loading Vulgate..."):
+            vulgate = get_vulgate_text(verse_ref)
+        render_text_block(
+            "Vulgate",
+            vulgate.get("original", "[Error]"),
+            vulgate.get("english", "[Error]"),
+            vulgate.get("notes"),
+        )
+else:
+    st.info("👆 Enter a verse reference to get started.")
