@@ -1,128 +1,148 @@
-# lxx.py
+# lxx.py  – Septuagint fetcher for Proto-Vorlage AI
+
 import requests
 import re
 from html import unescape
 
+
 # ===============================
-# BOOK NORMALIZATION TABLE
+# VALID BOOK NAMES (full names only)
 # ===============================
 
 BOOK_MAP = {
-    "genesis": "genesis", "gen": "genesis",
-    "exodus": "exodus", "exo": "exodus",
-    "leviticus": "leviticus", "lev": "leviticus",
-    "numbers": "numbers", "num": "numbers",
-    "deuteronomy": "deuteronomy", "deut": "deuteronomy",
-
-    "joshua": "joshua", "josh": "joshua",
-    "judges": "judges", "judg": "judges",
+    "genesis": "genesis",
+    "exodus": "exodus",
+    "leviticus": "leviticus",
+    "numbers": "numbers",
+    "deuteronomy": "deuteronomy",
+    "joshua": "joshua",
+    "judges": "judges",
     "ruth": "ruth",
-
-    "1 samuel": "1_samuel", "1sam": "1_samuel", "1sa": "1_samuel",
-    "2 samuel": "2_samuel", "2sam": "2_samuel", "2sa": "2_samuel",
-    "1 kings": "1_kings", "1ki": "1_kings",
-    "2 kings": "2_kings", "2ki": "2_kings",
-    
-    "1 chronicles": "1_chronicles", "1chron": "1_chronicles", "1ch": "1_chronicles",
-    "2 chronicles": "2_chronicles", "2chron": "2_chronicles", "2ch": "2_chronicles",
-    
+    "1 samuel": "1_samuel",
+    "2 samuel": "2_samuel",
+    "1 kings": "1_kings",
+    "2 kings": "2_kings",
+    "1 chronicles": "1_chronicles",
+    "2 chronicles": "2_chronicles",
     "ezra": "ezra",
-    "nehemiah": "nehemiah", "neh": "nehemiah",
-    "esther": "esther", "esth": "esther",
+    "nehemiah": "nehemiah",
+    "esther": "esther",
     "job": "job",
-    "psalms": "psalms", "ps": "psalms",
-    "proverbs": "proverbs", "prov": "proverbs", "pr": "proverbs",
-    "ecclesiastes": "ecclesiastes", "eccl": "ecclesiastes",
-    "song of songs": "song_of_songs", "song": "song_of_songs", "sos": "song_of_songs",
-    
-    "isaiah": "isaiah", "isa": "isaiah",
-    "jeremiah": "jeremiah", "jer": "jeremiah",
-    "lamentations": "lamentations", "lam": "lamentations",
-    "ezekiel": "ezekiel", "ezek": "ezekiel",
-    "daniel": "daniel", "dan": "daniel",
-    
-    "hosea": "hosea", "hos": "hosea",
+    "psalms": "psalms",
+    "proverbs": "proverbs",
+    "ecclesiastes": "ecclesiastes",
+    "song of songs": "song_of_songs",
+    "isaiah": "isaiah",
+    "jeremiah": "jeremiah",
+    "lamentations": "lamentations",
+    "ezekiel": "ezekiel",
+    "daniel": "daniel",
+    "hosea": "hosea",
     "joel": "joel",
     "amos": "amos",
-    "obadiah": "obadiah", "obad": "obadiah",
-    "jonah": "jonah", "jon": "jonah",
-    "micah": "micah", "mic": "micah",
+    "obadiah": "obadiah",
+    "jonah": "jonah",
+    "micah": "micah",
     "nahum": "nahum",
-    "habakkuk": "habakkuk", "hab": "habakkuk",
-    "zephaniah": "zephaniah", "zeph": "zephaniah",
-    "haggai": "haggai", "hag": "haggai",
-    "zechariah": "zechariah", "zech": "zechariah",
-    "malachi": "malachi", "mal": "malachi",
+    "habakkuk": "habakkuk",
+    "zephaniah": "zephaniah",
+    "haggai": "haggai",
+    "zechariah": "zechariah",
+    "malachi": "malachi"
 }
+
 
 # ===============================
 # HELPERS
 # ===============================
 
-def normalize_reference(ref):
-    """Convert user input like 'Gen 1:1' to ('genesis', '1', '1')."""
+def normalize_reference(ref: str):
+    """
+    Turns 'Genesis 1:1' into ('genesis', '1', '1').
+    Requires the user to type full book name.
+    Lower/upper case does not matter.
+    """
+
     ref = ref.strip().lower()
-    parts = ref.split()
-    if len(parts) < 2 or ":" not in parts[-1]:
+
+    if ":" not in ref:
         return None, None, None
-    book_raw = " ".join(parts[:-1])
-    book = BOOK_MAP.get(book_raw, None)
-    if not book:
+
+    try:
+        *book_parts, cv = ref.split()
+        book_raw = " ".join(book_parts)
+        book = BOOK_MAP.get(book_raw)
+
+        if not book:
+            return None, None, None
+
+        chapter, verse = cv.split(":")
+        return book, chapter, verse
+
+    except Exception:
         return None, None, None
-    chapter, verse = parts[-1].split(":")
-    return book, chapter, verse
 
 
-def clean_html(text):
-    """Remove unwanted HTML entities and tags."""
-    return unescape(text).replace("<br>", "").replace("</b>", "").replace("</span>", "").strip()
+def clean_html(t):
+    """Remove HTML tags and entities."""
+    return unescape(re.sub(r"<.*?>", "", t)).strip()
 
 
 # ===============================
-# SCRAPER
+# SCRAPER (BibleHub – Greek + Brenton)
 # ===============================
 
 def fetch_biblehub_lxx(book, chapter, verse):
     """
-    Fetches Greek and English (Brenton) text from BibleHub.
-    Example URL:
-    https://biblehub.com/sep/genesis/1.htm
+    Fetches LXX Greek and Brenton English from BibleHub.
+    Example URL: https://biblehub.com/sep/genesis/1.htm
     """
+
     url = f"https://biblehub.com/sep/{book}/{chapter}.htm"
-    res = requests.get(url, timeout=10)
-    res.raise_for_status()
+    headers = {"User-Agent": "Mozilla/5.0"}  # prevents 403 block
 
-    # Search for the specific verse block
-    pattern = rf'<span class="verse" id="{verse}">\s*(.*?)\s*</span>'
-    match = re.search(pattern, res.text, flags=re.S)
-    if not match:
-        return "[Greek not found]", "[English not found]"
+    res = requests.get(url, headers=headers, timeout=10)
+    if res.status_code != 200:
+        raise ValueError(f"HTTP {res.status_code} retrieving {url}")
 
-    verse_html = match.group(1)
+    html = res.text
 
-    # Split Greek (in <b>...</b>) and English text below
-    greek = re.search(r"<b>(.*?)</b>", verse_html, flags=re.S)
-    greek_text = clean_html(greek.group(1)) if greek else "[Greek missing]"
+    # BibleHub structure:
+    # <span class="num">1</span><b>ἐν ἀρχῇ ...</b>     (Greek)
+    # <span class="num">1</span><span class="eng">In the beginning...</span>
 
-    # English text follows immediately after bold section
-    english = re.sub(r"<b>.*?</b>", "", verse_html, flags=re.S)
-    english_text = clean_html(english)
+    greek_match = re.search(
+        rf'<span class="num">{verse}</span>\s*<b>(.*?)</b>',
+        html,
+        flags=re.S
+    )
 
-    return greek_text, english_text
+    eng_match = re.search(
+        rf'<span class="num">{verse}</span>.*?<span class="eng">(.*?)</span>',
+        html,
+        flags=re.S
+    )
+
+    greek = clean_html(greek_match.group(1)) if greek_match else "[Greek not found]"
+    english = clean_html(eng_match.group(1)) if eng_match else "[English not found]"
+
+    return greek, english
 
 
 # ===============================
-# MAIN API
+# PUBLIC API ENTRY POINT
 # ===============================
 
 def get_lxx_text(reference: str):
-    """Public function: get Greek + English for a given verse reference."""
+    """External function called by app.py"""
+
     book, chapter, verse = normalize_reference(reference)
+
     if not book:
         return {
             "original": "[Invalid reference]",
             "english": "[Invalid reference]",
-            "notes": "Use format like 'Genesis 1:1' or 'Isaiah 7:14'"
+            "notes": "Full book name required, e.g. 'Genesis 1:1' (no abbreviations)"
         }
 
     try:
@@ -130,11 +150,12 @@ def get_lxx_text(reference: str):
         return {
             "original": greek,
             "english": english,
-            "notes": "Source: BibleHub (Rahlfs LXX + Brenton English)"
+            "notes": "Source: BibleHub (Rahlfs Greek + Brenton English)"
         }
+
     except Exception as e:
         return {
-            "original": "[Error loading LXX Greek]",
-            "english": "[Error loading LXX English]",
+            "original": "[Error loading LXX]",
+            "english": "[Error loading LXX]",
             "notes": f"Error: {e}"
         }
