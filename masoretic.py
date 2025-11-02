@@ -1,7 +1,6 @@
 # Masoretic Text agent logic
 import re
 import streamlit as st
-from masoretic import get_masoretic_text
 
 # Helper to sanitize and validate a verse reference
 def normalize_reference(ref):
