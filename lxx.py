@@ -1,12 +1,11 @@
-# lxx.py  – Septuagint fetcher for Proto-Vorlage AI
+# lxx.py  – Septuagint fetcher for Proto-Vorlage AI (BibleHub scraper, regex-only)
 
 import requests
 import re
 from html import unescape
 
-
 # ===============================
-# VALID BOOK NAMES (full names only)
+# BOOK NAME MAP (BibleHub format)
 # ===============================
 
 BOOK_MAP = {
@@ -57,12 +56,7 @@ BOOK_MAP = {
 # ===============================
 
 def normalize_reference(ref: str):
-    """
-    Turns 'Genesis 1:1' into ('genesis', '1', '1').
-    Requires the user to type full book name.
-    Lower/upper case does not matter.
-    """
-
+    """Turns 'Genesis 1:1' into ('genesis', '1', '1')"""
     ref = ref.strip().lower()
 
     if ":" not in ref:
@@ -78,47 +72,43 @@ def normalize_reference(ref: str):
 
         chapter, verse = cv.split(":")
         return book, chapter, verse
-
     except Exception:
         return None, None, None
 
 
-def clean_html(t):
-    """Remove HTML tags and entities."""
-    return unescape(re.sub(r"<.*?>", "", t)).strip()
+def clean_html(text: str) -> str:
+    """Strip HTML tags and collapse whitespace."""
+    if not text:
+        return text
+    text = re.sub(r"<.*?>", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return unescape(text).strip()
 
 
 # ===============================
-# SCRAPER (BibleHub – Greek + Brenton)
+# SCRAPER (BibleHub – Rahlfs Greek & Brenton English)
 # ===============================
 
 def fetch_biblehub_lxx(book, chapter, verse):
-    """
-    Fetches LXX Greek and Brenton English from BibleHub.
-    Example URL: https://biblehub.com/sep/genesis/1.htm
-    """
-
     url = f"https://biblehub.com/sep/{book}/{chapter}.htm"
-    headers = {"User-Agent": "Mozilla/5.0"}  # prevents 403 block
-
+    headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(url, headers=headers, timeout=10)
+
     if res.status_code != 200:
         raise ValueError(f"HTTP {res.status_code} retrieving {url}")
 
     html = res.text
 
-    # BibleHub structure:
-    # <span class="num">1</span><b>ἐν ἀρχῇ ...</b>     (Greek)
-    # <span class="num">1</span><span class="eng">In the beginning...</span>
-
+    # Match Greek (LXX) – uses <span class="text lxx">
     greek_match = re.search(
-        rf'<span class="num">{verse}</span>\s*<b>(.*?)</b>',
+        rf'<span class="num">{verse}</span>\s*<span class="text lxx">(.*?)</span>',
         html,
         flags=re.S
     )
 
+    # Match Brenton English – appears in separate <div class="p eng">
     eng_match = re.search(
-        rf'<span class="num">{verse}</span>.*?<span class="eng">(.*?)</span>',
+        rf'<div class="p eng">.*?<span class="num">{verse}</span>\s*<span class="text">(.*?)</span>',
         html,
         flags=re.S
     )
@@ -134,15 +124,13 @@ def fetch_biblehub_lxx(book, chapter, verse):
 # ===============================
 
 def get_lxx_text(reference: str):
-    """External function called by app.py"""
-
     book, chapter, verse = normalize_reference(reference)
 
     if not book:
         return {
             "original": "[Invalid reference]",
             "english": "[Invalid reference]",
-            "notes": "Full book name required, e.g. 'Genesis 1:1' (no abbreviations)"
+            "notes": "Full book name required (e.g. 'Genesis 1:1')"
         }
 
     try:
