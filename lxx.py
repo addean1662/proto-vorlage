@@ -99,22 +99,30 @@ def fetch_biblehub_lxx(book, chapter, verse):
 
     html = res.text
 
-    # Match Greek (LXX) – uses <span class="text lxx">
+    # Flexible Greek match (covers <span class="text lxx"> or just <span class="text">)
     greek_match = re.search(
-        rf'<span class="num">{verse}</span>\s*<span class="text lxx">(.*?)</span>',
+        rf'<span class="num">\s*{verse}\s*</span>\s*<span class="text(?: lxx)?">(.*?)</span>',
         html,
-        flags=re.S
+        flags=re.S | re.I
     )
 
-    # Match Brenton English – appears in separate <div class="p eng">
-    eng_match = re.search(
-        rf'<div class="p eng">.*?<span class="num">{verse}</span>\s*<span class="text">(.*?)</span>',
+    # English often follows as <span class="text"> inside <div class="p eng">,
+    # but fallback because structure varies
+    english_match = re.search(
+        rf'<div class="p[^>]*>\s*<span class="num">\s*{verse}\s*</span>\s*<span class="text">(.*?)</span>',
         html,
-        flags=re.S
+        flags=re.S | re.I
     )
+    if not english_match:
+        # fallback pattern (same line layout)
+        english_match = re.search(
+            rf'<span class="num">\s*{verse}\s*</span>\s*<span class="text">(.*?)</span>',
+            html,
+            flags=re.S | re.I
+        )
 
     greek = clean_html(greek_match.group(1)) if greek_match else "[Greek not found]"
-    english = clean_html(eng_match.group(1)) if eng_match else "[English not found]"
+    english = clean_html(english_match.group(1)) if english_match else "[English not found]"
 
     return greek, english
 
