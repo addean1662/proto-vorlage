@@ -1,49 +1,54 @@
-# masoretic.py
+# masoretic.py — Part 1: Raw Hebrew Token Extraction
 
 import requests
 import re
-from html import unescape
 
+def strip_cantillation(text):
+    """
+    Removes cantillation marks and vowels (niqqud) from Hebrew text.
+    Use if you want just the consonantal text.
+    """
+    # Unicode range for Hebrew vowels + trope + points
+    return re.sub(r'[\u0591-\u05C7]', '', text)
 
-def clean_html(text: str) -> str:
-    """Remove most HTML tags and footnote clutter using regex only."""
-    if not text:
-        return text
+def tokenize_hebrew(text):
+    """
+    Splits Hebrew text into word tokens.
+    Removes punctuation such as sof pasuq, comma, etc.
+    Keeps final forms intact: ך ם ן ף ץ
+    """
+    # Remove punctuation like maqaf, comma, sof pasuq, etc.
+    text = re.sub(r'[,:;־׃]', ' ', text)
+    # Split on whitespace
+    return [w for w in text.split() if w.strip()]
 
-    # Remove all HTML tags
-    text = re.sub(r"<.*?>", " ", text)
-
-    # Remove bracket-style notes like [1], (2), etc
-    text = re.sub(r"\[[^\]]*\]|\([^\)]*\)", " ", text)
-
-    # Remove stray asterisks / footnote markers
-    text = re.sub(r"\*", " ", text)
-
-    # Collapse extra whitespace
-    text = re.sub(r"\s+", " ", text)
-
-    return unescape(text).strip()
-
-
-def get_masoretic_text(reference: str) -> dict:
-    """Fetch Masoretic text from Sefaria API and return cleaned Hebrew + English."""
+def get_masoretic_tokens(reference, strip_vowels=False):
+    """
+    Fetches Hebrew verse text from Sefaria and returns a list of tokens.
+    Example: get_masoretic_tokens("Genesis 1:1")
+    """
     try:
         url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
-        response = requests.get(url, timeout=10)
-        data = response.json()
+        res = requests.get(url)
+        data = res.json()
 
-        hebrew_raw = data.get("he", ["[Hebrew not found]"])[0]
-        english_raw = data.get("text", ["[English not found]"])[0]
+        raw_hebrew = data.get("he", ["[Hebrew not found]"])[0]
+
+        if strip_vowels:
+            raw_hebrew = strip_cantillation(raw_hebrew)
+
+        tokens = tokenize_hebrew(raw_hebrew)
 
         return {
-            "original": clean_html(hebrew_raw),
-            "english": clean_html(english_raw),
-            "notes": "Source: Sefaria.org (Masoretic Text)"
+            "reference": reference,
+            "raw_text": raw_hebrew,
+            "tokens": tokens,
         }
 
     except Exception as e:
         return {
-            "original": "[Error retrieving Hebrew]",
-            "english": "[Error retrieving English]",
-            "notes": f"Error: {e}"
+            "reference": reference,
+            "raw_text": "[Error]",
+            "tokens": [],
+            "error": str(e),
         }
