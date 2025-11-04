@@ -1,105 +1,83 @@
-# masoretic.py – Full Hebrew Token + Gloss A Loader for Proto-Vorlage AI
+# masoretic.py  – Masoretic Hebrew fetcher for Proto-Vorlage AI
 
 import requests
+from html import unescape
 import re
 
+
 # ===============================
-# Helpers
+#  BASIC HTML / TEXT CLEANERS
 # ===============================
 
-def strip_cantillation(text):
-    """Removes cantillation marks and vowels (niqqud) from Hebrew text."""
-    return re.sub(r'[\u0591-\u05C7]', '', text)
+def strip_html(text: str) -> str:
+    """Remove HTML tags and decode entities."""
+    if not text:
+        return ""
+    text = re.sub(r"<.*?>", "", text)   # remove tags
+    return unescape(text).strip()
 
-def normalize_hebrew(token):
+
+def strip_cantillation(text: str) -> str:
+    """Remove vowels + cantillation marks from Hebrew."""
+    return re.sub(r"[\u0591-\u05C7]", "", text)
+
+
+def normalize_hebrew(token: str) -> str:
     """
     Normalize Hebrew final forms and strip vowels/cantillation:
     ך → כ, ם → מ, ן → נ, ף → פ, ץ → צ
     """
-    final_map = str.maketrans("ךםןףץ", "כמנהפצ")
+    final_map = str.maketrans("ךםןףץ", "כמנהפצ")  # must be 5→5
     token = strip_cantillation(token)
     return token.translate(final_map)
 
-def tokenize_hebrew(text):
-    """Splits Hebrew text into word tokens."""
-    text = re.sub(r'[,:;־׃]', ' ', text)  # remove punctuation
-    return [w for w in text.split() if w.strip()]
 
-def lemmatize_tokens(tokens):
-    """Return normalized lemma candidates for Hebrew tokens."""
-    return [normalize_hebrew(token) for token in tokens]
+# ===============================
+#  SEFARIA REQUEST
+# ===============================
+
+def fetch_sefaria(reference: str):
+    """Returns raw Hebrew & English from the Sefaria API."""
+    url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
+    res = requests.get(url, timeout=10)
+
+    if res.status_code != 200:
+        raise ValueError(f"Sefaria API error {res.status_code}")
+
+    data = res.json()
+    heb = strip_html(data.get("he", ["[Hebrew not found]"])[0])
+    eng = strip_html(data.get("text", ["[English not found]"])[0])
+    return heb, eng
 
 
 # ===============================
-# Gloss A Dictionary
+#  PUBLIC API
 # ===============================
 
-# A small sample; full version would include all biblical lemmas
-GLOSS_DICT = {
-    "בראשית": "in-beginning",
-    "ברא": "he-created",
-    "אלהים": "God",
-    "את": "[obj]",
-    "השמים": "the-heavens",
-    "ואת": "and-[obj]",
-    "הארץ": "the-earth",
-    # Add more lemma: gloss mappings here...
-}
-
-def gloss_tokens(lemmas):
-    """Maps Hebrew lemmas to English glosses using GLOSS_DICT."""
-    return [GLOSS_DICT.get(lemma, f"[{lemma}]") for lemma in lemmas]
-
-
-# ===============================
-# Masoretic Functions
-# ===============================
-
-def get_masoretic_glossed_text(reference):
+def get_masoretic_text(reference: str):
     """
-    Fetches Hebrew verse from Sefaria, tokenizes, lemmatizes, and glosses.
-    Returns tokens (original), lemmas (normalized), and glosses.
+    Main public function used by Streamlit app.
+    Returns Hebrew + placeholder "gloss" English for now.
     """
+
     try:
-        url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
-        res = requests.get(url)
-        data = res.json()
+        hebrew_raw, english_raw = fetch_sefaria(reference)
 
-        raw_hebrew = data.get("he", ["[Hebrew not found]"])[0]
-        tokens = tokenize_hebrew(raw_hebrew)
-        lemmas = lemmatize_tokens(tokens)
-        glosses = gloss_tokens(lemmas)
+        # Tokenize Hebrew into words (basic split – later improved)
+        tokens = hebrew_raw.split()
+        normalized = [normalize_hebrew(t) for t in tokens]
 
         return {
-            "reference": reference,
-            "tokens": tokens,
-            "lemmas": lemmas,
-            "glosses": glosses,
-            "notes": "Source: Sefaria (Masoretic) + Proto-Vorlage Gloss Dict"
+            "original": hebrew_raw,
+            "normalized": " ".join(normalized),
+            "english": "[Gloss coming soon]",
+            "notes": "Source: Sefaria API (Masoretic Text)"
         }
 
     except Exception as e:
         return {
-            "reference": reference,
-            "tokens": [],
-            "lemmas": [],
-            "glosses": [],
+            "original": "[Error retrieving Hebrew]",
+            "normalized": "",
+            "english": "[Error retrieving English]",
             "notes": f"Error: {e}"
         }
-
-
-# ===============================
-# Backwards compatibility
-# ===============================
-
-def get_masoretic_text(reference):
-    """
-    Original function used in your app.py.
-    Returns Hebrew + placeholder English until gloss is fully integrated.
-    """
-    data = get_masoretic_glossed_text(reference)
-    return {
-        "original": " ".join(data["tokens"]),
-        "english": " ".join(data["glosses"]) or "[Gloss coming soon]",
-        "notes": data["notes"]
-    }
