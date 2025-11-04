@@ -1,4 +1,4 @@
-# masoretic.py — Part 2a: Add Hebrew Lemmatization
+# masoretic.py – Full Hebrew Token + Gloss A Loader for Proto-Vorlage AI
 
 import requests
 import re
@@ -27,17 +27,38 @@ def tokenize_hebrew(text):
 
 def lemmatize_tokens(tokens):
     """Return normalized lemma candidates for Hebrew tokens."""
-    lemmas = [normalize_hebrew(token) for token in tokens]
-    return lemmas
+    return [normalize_hebrew(token) for token in tokens]
+
+
+# ===============================
+# Gloss A Dictionary
+# ===============================
+
+# A small sample; full version would include all biblical lemmas
+GLOSS_DICT = {
+    "בראשית": "in-beginning",
+    "ברא": "he-created",
+    "אלהים": "God",
+    "את": "[obj]",
+    "השמים": "the-heavens",
+    "ואת": "and-[obj]",
+    "הארץ": "the-earth",
+    # Add more lemma: gloss mappings here...
+}
+
+def gloss_tokens(lemmas):
+    """Maps Hebrew lemmas to English glosses using GLOSS_DICT."""
+    return [GLOSS_DICT.get(lemma, f"[{lemma}]") for lemma in lemmas]
+
 
 # ===============================
 # Masoretic Functions
 # ===============================
 
-def get_masoretic_tokens_and_lemmas(reference):
+def get_masoretic_glossed_text(reference):
     """
-    Fetches Hebrew verse from Sefaria, tokenizes and lemmatizes.
-    Returns tokens (original) and lemmas (normalized roots).
+    Fetches Hebrew verse from Sefaria, tokenizes, lemmatizes, and glosses.
+    Returns tokens (original), lemmas (normalized), and glosses.
     """
     try:
         url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
@@ -47,12 +68,14 @@ def get_masoretic_tokens_and_lemmas(reference):
         raw_hebrew = data.get("he", ["[Hebrew not found]"])[0]
         tokens = tokenize_hebrew(raw_hebrew)
         lemmas = lemmatize_tokens(tokens)
+        glosses = gloss_tokens(lemmas)
 
         return {
             "reference": reference,
             "tokens": tokens,
             "lemmas": lemmas,
-            "notes": "Source: Sefaria API (Masoretic Text)"
+            "glosses": glosses,
+            "notes": "Source: Sefaria (Masoretic) + Proto-Vorlage Gloss Dict"
         }
 
     except Exception as e:
@@ -60,8 +83,10 @@ def get_masoretic_tokens_and_lemmas(reference):
             "reference": reference,
             "tokens": [],
             "lemmas": [],
+            "glosses": [],
             "notes": f"Error: {e}"
         }
+
 
 # ===============================
 # Backwards compatibility
@@ -70,11 +95,11 @@ def get_masoretic_tokens_and_lemmas(reference):
 def get_masoretic_text(reference):
     """
     Original function used in your app.py.
-    Leaves English as a placeholder for now.
+    Returns Hebrew + placeholder English until gloss is fully integrated.
     """
-    data = get_masoretic_tokens_and_lemmas(reference)
+    data = get_masoretic_glossed_text(reference)
     return {
         "original": " ".join(data["tokens"]),
-        "english": "[Word-for-word gloss coming soon]",
+        "english": " ".join(data["glosses"]) or "[Gloss coming soon]",
         "notes": data["notes"]
     }
