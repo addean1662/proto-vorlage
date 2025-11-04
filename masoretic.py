@@ -2,33 +2,34 @@
 
 import requests
 import re
-from bs4 import BeautifulSoup
 from html import unescape
 
 
 def clean_html(text: str) -> str:
-    """Remove HTML tags, footnotes, and extra whitespace from Sefaria text."""
+    """Remove most HTML tags and footnote clutter using regex only."""
     if not text:
         return text
 
-    # Strip all HTML tags
-    soup = BeautifulSoup(text, "html.parser")
-    cleaned = soup.get_text(separator=" ")
+    # Remove all HTML tags
+    text = re.sub(r"<.*?>", " ", text)
 
-    # Remove inline footnote markers like * or (a)
-    cleaned = re.sub(r"\[\d+]", "", cleaned)          # [1], [2], etc.
-    cleaned = re.sub(r"\(\d+\)", "", cleaned)         # (1), (2), etc.
-    cleaned = re.sub(r"\s*\*\s*", " ", cleaned)       # stray asterisks
-    cleaned = re.sub(r"\s+", " ", cleaned)            # collapse whitespace
+    # Remove bracket-style notes like [1], (2), etc
+    text = re.sub(r"\[[^\]]*\]|\([^\)]*\)", " ", text)
 
-    return unescape(cleaned).strip()
+    # Remove stray asterisks / footnote markers
+    text = re.sub(r"\*", " ", text)
+
+    # Collapse extra whitespace
+    text = re.sub(r"\s+", " ", text)
+
+    return unescape(text).strip()
 
 
 def get_masoretic_text(reference: str) -> dict:
-    """Fetch Hebrew + English Masoretic text from Sefaria API and sanitize it."""
+    """Fetch Masoretic text from Sefaria API and return cleaned Hebrew + English."""
     try:
-        api_url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
-        response = requests.get(api_url, timeout=10)
+        url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
+        response = requests.get(url, timeout=10)
         data = response.json()
 
         hebrew_raw = data.get("he", ["[Hebrew not found]"])[0]
