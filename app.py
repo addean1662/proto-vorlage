@@ -1,9 +1,10 @@
 # app.py — Proto-Vorlage AI Streamlit app
 
 import streamlit as st
-from masoretic import get_masoretic_text
+from masoretic import get_masoretic_with_gloss   # ✔ updated import
+from gloss_masoretic import gloss_word           # ✔ new gloss engine
 from lxx import get_lxx_text
-from vulgate import get_vulgate_text   # assuming similar structure
+from vulgate import get_vulgate_text
 
 st.set_page_config(page_title="Proto-Vorlage AI", layout="centered")
 
@@ -17,7 +18,7 @@ st.markdown(
     Compare Old Testament textual traditions with smart verse lookup.  
     Enter a full verse reference (e.g. `Genesis 1:1`), and this app displays:
 
-    - ✅ Masoretic Hebrew + English (via Sefaria.org)  
+    - ✅ Masoretic Hebrew + **word-for-word gloss** (via Sefaria.org)  
     - ✅ Septuagint Greek + English (via BibleHub)  
     - ✅ Latin Vulgate + English (placeholder for now)  
     - 🕒 Dead Sea Scrolls integration coming soon
@@ -35,14 +36,18 @@ if reference:
     col1, col2, col3, col4 = st.columns(4)
 
     # === MASORETIC ===
-    with st.spinner("Loading Masoretic Text..."):
-        masoretic = get_masoretic_text(reference.strip().title())
+    with st.spinner("Loading Masoretic Text + Gloss..."):
+        masoretic_full = get_masoretic_with_gloss(reference.strip().title(), gloss_word)
 
     with col1:
         st.subheader("Masoretic")
-        st.markdown(f"**Hebrew:** {masoretic['original']}", unsafe_allow_html=True)
-        st.markdown(f"**English:** {masoretic['english']}")
-        st.caption(masoretic.get("notes", ""))
+        st.markdown("**Hebrew:**")
+        st.markdown(masoretic_full['original'], unsafe_allow_html=True)
+
+        st.markdown("**Gloss (word-for-word):**")
+        st.markdown(f"```\n{masoretic_full['glossed']}\n```")   # keeps vertical spacing
+
+        st.caption(masoretic_full.get("notes", ""))
 
     # === DSS PLACEHOLDER ===
     with col2:
