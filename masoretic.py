@@ -1,32 +1,19 @@
-# masoretic.py — Part 1: Raw Hebrew Token Extraction
+# masoretic.py — Part 1: Raw Hebrew Token Extraction (with backward compatibility)
 
 import requests
 import re
 
 def strip_cantillation(text):
-    """
-    Removes cantillation marks and vowels (niqqud) from Hebrew text.
-    Use if you want just the consonantal text.
-    """
-    # Unicode range for Hebrew vowels + trope + points
+    """Removes cantillation marks and vowels (niqqud) from Hebrew text."""
     return re.sub(r'[\u0591-\u05C7]', '', text)
 
 def tokenize_hebrew(text):
-    """
-    Splits Hebrew text into word tokens.
-    Removes punctuation such as sof pasuq, comma, etc.
-    Keeps final forms intact: ך ם ן ף ץ
-    """
-    # Remove punctuation like maqaf, comma, sof pasuq, etc.
-    text = re.sub(r'[,:;־׃]', ' ', text)
-    # Split on whitespace
+    """Splits Hebrew text into word tokens."""
+    text = re.sub(r'[,:;־׃]', ' ', text)  # remove punctuation
     return [w for w in text.split() if w.strip()]
 
 def get_masoretic_tokens(reference, strip_vowels=False):
-    """
-    Fetches Hebrew verse text from Sefaria and returns a list of tokens.
-    Example: get_masoretic_tokens("Genesis 1:1")
-    """
+    """Fetches raw Hebrew text from Sefaria and returns tokenized output."""
     try:
         url = f"https://www.sefaria.org/api/texts/{reference}?lang=he&with=hebrew"
         res = requests.get(url)
@@ -43,6 +30,7 @@ def get_masoretic_tokens(reference, strip_vowels=False):
             "reference": reference,
             "raw_text": raw_hebrew,
             "tokens": tokens,
+            "notes": "Source: Sefaria API (Masoretic Text)"
         }
 
     except Exception as e:
@@ -50,5 +38,18 @@ def get_masoretic_tokens(reference, strip_vowels=False):
             "reference": reference,
             "raw_text": "[Error]",
             "tokens": [],
-            "error": str(e),
+            "notes": f"Error: {e}"
         }
+
+# ✅ Backwards compatibility for existing Streamlit app
+def get_masoretic_text(reference):
+    """
+    Original function name expected by app.py.
+    Returns only the raw Hebrew and placeholder English until gloss is added.
+    """
+    data = get_masoretic_tokens(reference)
+    return {
+        "original": data["raw_text"],
+        "english": "[Glossed English coming soon]",
+        "notes": data["notes"]
+    }
