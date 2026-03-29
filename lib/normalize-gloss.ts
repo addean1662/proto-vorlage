@@ -82,23 +82,19 @@ const LEMMA_OVERRIDES: Record<string, string> = {
   'H3318': 'to go out',     // יצא   — yatsa
   'H5927': 'to go up',      // עלה   — alah
   'H3381': 'to go down',    // ירד   — yarad
-  'H5414': 'to give',       // נתן   — natan
   'H6680': 'to command',    // צוה   — tsavah
   'H7725': 'to return',     // שוב   — shuv
   'H5975': 'to stand',      // עמד   — amad
   'H1697': 'word',          // דבר   — davar (noun)
-  'H5971': 'people',        // עם    — am
   'H127':  'ground',        // אדמה  — adamah
   'H120':  'man',           // אדם   — adam (humankind)
   'H4191': 'to die',        // מות   — muth
   'H2416': 'living',        // חי    — chai (alive/living)
   'H7760': 'to set',        // שים   — sim (to put/set/place)
   'H5650': 'servant',       // עבד   — eved
-  'H3117': 'day',           // יום   — yom
   'H6256': 'time',          // עת    — et (time/season)
   'H2233': 'seed',          // זרע   — zera
   'H6086': 'tree',          // עץ    — ets
-  'H4325': 'waters',        // מים   — mayim
   'H7704': 'field',         // שדה   — sadeh
   'H3820': 'heart',         // לב    — lev
   'H5869': 'eye',           // עין   — ayin (eye/spring)
@@ -111,8 +107,6 @@ const LEMMA_OVERRIDES: Record<string, string> = {
   'H7227': 'great',         // רב    — rav (many/great)
   'H3966': 'very',          // מאד   — me'od
   'H996':  'between',       // בין   — beyn
-  'H5921': 'upon',          // על    — al
-  'H6440': 'face',          // פנים  — panim
   // Proper names — standard English forms
   'H4872': 'Moses',         // משה   — Mosheh
   'H3478': 'Israel',        // ישראל — Yisrael
@@ -138,7 +132,7 @@ const LEMMA_OVERRIDES: Record<string, string> = {
   'G1510': 'was',           // εἰμί
   'G0746': 'beginning',     // ἀρχή
   'G2532': 'and',           // καί
-  'G3588': 'the',           // definite article (all forms)
+
   'G3956': 'all',           // πᾶς — pas
   'G1722': 'in',            // ἐν — en
   'G4314': 'toward',        // πρός — pros
