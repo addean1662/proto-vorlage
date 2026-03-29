@@ -109,6 +109,7 @@ SEMANTIC ALIGNMENT — this is meaning-based, NOT position-based:
 - Ask for each Latin word: "Which Hebrew word does this translate?" Put them on the same row.
 - If a Greek or Latin word has no Hebrew equivalent (genuine addition), it gets its own row with ${useMTIdx ? 'mt_idx: null' : 'mt orig "—"'}.
 - The Hebrew conjunction prefix (ו-) baked into a verb form is NOT a separate MT word. If the Greek has a standalone καί or the Latin has "et" for that prefix, they are additions — give them their own row with ${useMTIdx ? 'mt_idx: null' : 'mt "—"'}.
+- Greek definite articles (ὁ, ἡ, τό, τόν, τήν, τοῦ, τῆς, τοῖς, τῇ, τῶν, etc.) ALWAYS get mt_idx: null — Hebrew expresses definiteness with a prefix (ה-) baked into the noun word, never a separate word. Put the article on its own row (mt_idx: null), then put the NOUN it modifies on the same row as the corresponding Hebrew noun.
 
 WORD COVERAGE (non-negotiable):
 ${coverageNote}
