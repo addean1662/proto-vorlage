@@ -94,7 +94,7 @@ function assembleDisplayRow(
   if ('lxx_idx' in raw) {
     const idx = raw.lxx_idx;
     lxx = (idx !== null && idx !== undefined && lxxWords && lxxWords[idx])
-      ? { orig: lxxWords[idx].orig, eng: lxxWords[idx].eng, xlit: lxxWords[idx].xlit, def: lxxWords[idx].def, strongs: lxxWords[idx].strongs ?? undefined }
+      ? { orig: lxxWords[idx].orig, eng: normalizeGloss(lxxWords[idx].eng, lxxWords[idx].orig, lxxWords[idx].strongs ?? undefined), xlit: lxxWords[idx].xlit, def: lxxWords[idx].def, strongs: lxxWords[idx].strongs ?? undefined }
       : DASH;
   } else {
     lxx = raw.lxx ?? DASH;
@@ -105,7 +105,7 @@ function assembleDisplayRow(
   if ('vul_idx' in raw) {
     const idx = raw.vul_idx;
     vul = (idx !== null && idx !== undefined && vulWords && vulWords[idx])
-      ? { orig: vulWords[idx].orig, eng: vulWords[idx].eng, xlit: vulWords[idx].xlit, def: vulWords[idx].def, lemma: vulWords[idx].lemma ?? undefined }
+      ? { orig: vulWords[idx].orig, eng: normalizeGloss(vulWords[idx].eng, vulWords[idx].orig, vulWords[idx].lemma ?? undefined), xlit: vulWords[idx].xlit, def: vulWords[idx].def, lemma: vulWords[idx].lemma ?? undefined }
       : DASH;
   } else {
     vul = raw.vul ?? DASH;
@@ -303,7 +303,9 @@ export async function POST(request: NextRequest): Promise<Response> {
         const dss = row.dss;
         if (dss.orig && dss.orig !== '—' && dss.orig !== '-') {
           const matched = matchDSSWord(dss.orig, book);
-          const eng = matched ? matched.eng : normalizeGloss(dss.eng, dss.orig);
+          const eng = matched
+            ? normalizeGloss(matched.eng, dss.orig, matched.lemma ?? undefined)
+            : normalizeGloss(dss.eng, dss.orig);
           return { ...row, dss: { ...dss, eng } };
         }
         return row;
