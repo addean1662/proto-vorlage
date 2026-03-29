@@ -33,6 +33,16 @@ console.log('Loading Strong\'s dictionary…');
 const strongsDict = require('./strongs-hebrew-dictionary.js');
 console.log(`  Loaded ${Object.keys(strongsDict).length} Strong's entries`);
 
+// Gloss map for standalone OSHB morpheme prefixes (no Strong's number)
+const PREFIX_GLOSSES = {
+  'b': 'in',       // בְּ  bet   — in/by/with
+  'l': 'to',       // לְ  lamed — to/for
+  'm': 'from',     // מִ  mem   — from
+  'k': 'like',     // כְּ  kaph  — like/as
+  'c': 'and',      // וְ  waw   — and (conjunction)
+  'i': '?',        // הֲ  heh   — interrogative marker
+};
+
 /**
  * Normalize an OSHB augmented lemma like "b/7225", "1254 a", "d/8064", "c/853"
  * to a canonical Strong's key like "H7225", "H1254", "H8064", "H853".
@@ -44,9 +54,24 @@ function normalizeLemma(raw) {
   let s = raw.includes('/') ? raw.slice(raw.lastIndexOf('/') + 1) : raw;
   // Strip trailing variant letter(s) like " a", " b"
   s = s.replace(/\s+[a-z]$/, '').trim();
+  // Strip trailing "+" (proper noun / place name marker in OSHB)
+  s = s.replace(/\+$/, '');
   // Must be numeric
   if (!/^\d+$/.test(s)) return null;
   return `H${s}`;
+}
+
+/**
+ * Get prefix gloss for a compound lemma like "c/l", "b/884+", "m/6307+".
+ * Returns a combined gloss for the prefix portion, or null if not applicable.
+ */
+function getPrefixGloss(raw) {
+  if (!raw || !raw.includes('/')) return null;
+  const parts = raw.split('/');
+  // Collect all non-numeric parts (the prefix chain) before the final number
+  const prefixes = parts.slice(0, -1).filter(p => PREFIX_GLOSSES[p]);
+  if (prefixes.length === 0) return null;
+  return prefixes.map(p => PREFIX_GLOSSES[p]).join(' ');
 }
 
 /**
@@ -151,8 +176,22 @@ for (const { file, out } of BOOKS) {
   for (const { osisID, words } of verses) {
     const key = osisToKey(osisID);
     const enriched = words.map(({ orig, lemma: lemmaRaw }) => {
+      // Standalone prefix morpheme (no number component)
+      if (lemmaRaw && !lemmaRaw.match(/\d/) && PREFIX_GLOSSES[lemmaRaw.split('/').pop()]) {
+        const eng = PREFIX_GLOSSES[lemmaRaw.split('/').pop()];
+        totalWords++;
+        return { orig, lemma: lemmaRaw, eng };
+      }
       const lemma = normalizeLemma(lemmaRaw);
-      const eng = getGloss(lemma);
+      let eng = getGloss(lemma);
+      // For compound lemmas (e.g. "c/l", "b/884+"), prepend prefix gloss to root gloss
+      if (eng === '[no gloss]' || lemmaRaw?.includes('/')) {
+        const prefixGloss = getPrefixGloss(lemmaRaw);
+        if (prefixGloss) {
+          const rootGloss = eng !== '[no gloss]' ? eng : getGloss(lemma);
+          eng = rootGloss !== '[no gloss]' ? `${prefixGloss} ${rootGloss}` : prefixGloss;
+        }
+      }
       if (eng === '[no gloss]') noGlossCount++;
       totalWords++;
       return { orig, lemma: lemma ?? lemmaRaw ?? null, eng };
