@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
+    "@upstash/redis": "^1.37.0",
     "@vercel/kv": "^3.0.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
