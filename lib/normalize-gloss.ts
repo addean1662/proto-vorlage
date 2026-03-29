@@ -35,36 +35,126 @@ const PARTICLES: Record<string, string> = {
 // Canonical glosses keyed by Strong's lemma number.
 // Used when particle map misses; overrides mechanical stripping.
 const LEMMA_OVERRIDES: Record<string, string> = {
-  // Hebrew (OSHB)
-  'H430':  'God',         // אלהים — Elohim
-  'H853':  'ʾet',         // את    — direct object marker
-  'H776':  'the earth',   // ארץ   — eretz
-  'H7225': 'beginning',   // ראשית — reshit
-  'H8064': 'the heavens', // שמים  — shamayim
-  'H8415': 'the deep',    // תהום  — tehom
-  'H1254': 'created',     // ברא   — bara
-  'H7307': 'spirit',      // רוח   — ruach
-  'H6440': 'face',        // פנים  — panim / paneh
-  'H4325': 'waters',      // מים   — mayim
-  'H1961': 'was',         // היה   — hayah (to be/exist)
-  'H2822': 'darkness',    // חשך   — choshek
-  'H8414': 'formless',    // תהו   — tohu
-  'H922':  'empty',       // בהו   — bohu
-  'H7363': 'hovering',    // רחף   — rachaph
-  'H5921': 'upon',        // על    — al
-  'H8432': 'midst',       // תוך   — tavek (middle/midst)
-  // Greek (LXX STEPBible)
-  'G3588': 'the',         // ὁ/ἡ/τό — definite article
-  'G2316': 'God',         // θεός
-  'G1093': 'earth',       // γῆ
-  'G3772': 'heaven',      // οὐρανός
-  'G4655': 'darkness',    // σκότος
-  'G0012': 'abyss',       // ἄβυσσος
-  'G4151': 'spirit',      // πνεῦμα
-  'G5204': 'water',       // ὕδωρ
-  'G4160': 'made',        // ποιέω — "to do/make" → "made"
-  'G1510': 'was',         // εἰμί
-  'G0746': 'beginning',   // ἀρχή
+  // ── Hebrew (OSHB) — high-frequency words ────────────────────────────────────
+  'H430':  'God',           // אלהים — Elohim
+  'H853':  'ʾet',           // את    — direct object marker
+  'H854':  'with',          // את    — preposition "with/at" (distinct from H853)
+  'H776':  'the earth',     // ארץ   — eretz
+  'H7225': 'beginning',     // ראשית — reshit
+  'H8064': 'the heavens',   // שמים  — shamayim
+  'H8415': 'the deep',      // תהום  — tehom
+  'H1254': 'created',       // ברא   — bara
+  'H7307': 'spirit',        // רוח   — ruach
+  'H6440': 'face',          // פנים  — panim / paneh
+  'H4325': 'waters',        // מים   — mayim
+  'H1961': 'was',           // היה   — hayah (to be/exist)
+  'H2822': 'darkness',      // חשך   — choshek
+  'H8414': 'formless',      // תהו   — tohu
+  'H922':  'empty',         // בהו   — bohu
+  'H7363': 'hovering',      // רחף   — rachaph
+  'H5921': 'upon',          // על    — al
+  'H8432': 'midst',         // תוך   — tavek (middle/midst)
+  // Very common nouns / pronouns / particles
+  'H3068': 'LORD',          // יהוה  — Tetragrammaton (conventional rendering)
+  'H413':  'toward',        // אל    — el (preposition "to/toward")
+  'H3605': 'all',           // כל    — kol (all/every/whole)
+  'H3588': 'for',           // כי    — ki (for/because/that/when)
+  'H1121': 'son',           // בן    — ben
+  'H3117': 'day',           // יום   — yom
+  'H376':  'man',           // איש   — ish
+  'H935':  'to come',       // בוא   — bo (to come/go in)
+  'H5971': 'people',        // עם    — am
+  'H259':  'one',           // אחד   — echad
+  'H4480': 'from',          // מן    — min (from)
+  'H2088': 'this',          // זה    — zeh (demonstrative)
+  'H518':  'if',            // אם    — im (if/whether)
+  'H5704': 'until',         // עד    — ad (until/as far as)
+  'H1696': 'to speak',      // דבר   — davar (to speak/say)
+  'H3548': 'priest',        // כהן   — kohen
+  'H8033': 'there',         // שם    — sham (there)
+  'H859':  'you',           // אתה   — atah (thou/you)
+  'H1004': 'house',         // בית   — bayit
+  'H5414': 'to give',       // נתן   — natan
+  'H6213': 'to do',         // עשה   — asah (to do/make)
+  'H1980': 'to walk',       // הלך   — halak
+  'H7200': 'to see',        // ראה   — ra'ah
+  'H3947': 'to take',       // לקח   — laqach
+  'H3318': 'to go out',     // יצא   — yatsa
+  'H5927': 'to go up',      // עלה   — alah
+  'H3381': 'to go down',    // ירד   — yarad
+  'H5414': 'to give',       // נתן   — natan
+  'H6680': 'to command',    // צוה   — tsavah
+  'H7725': 'to return',     // שוב   — shuv
+  'H5975': 'to stand',      // עמד   — amad
+  'H1697': 'word',          // דבר   — davar (noun)
+  'H5971': 'people',        // עם    — am
+  'H127':  'ground',        // אדמה  — adamah
+  'H120':  'man',           // אדם   — adam (humankind)
+  'H4191': 'to die',        // מות   — muth
+  'H2416': 'living',        // חי    — chai (alive/living)
+  'H7760': 'to set',        // שים   — sim (to put/set/place)
+  'H5650': 'servant',       // עבד   — eved
+  'H3117': 'day',           // יום   — yom
+  'H6256': 'time',          // עת    — et (time/season)
+  'H2233': 'seed',          // זרע   — zera
+  'H6086': 'tree',          // עץ    — ets
+  'H4325': 'waters',        // מים   — mayim
+  'H7704': 'field',         // שדה   — sadeh
+  'H3820': 'heart',         // לב    — lev
+  'H5869': 'eye',           // עין   — ayin (eye/spring)
+  'H3027': 'hand',          // יד    — yad
+  'H6310': 'mouth',         // פה    — peh
+  'H1288': 'to bless',      // ברך   — barakh
+  'H6942': 'holy',          // קדש   — qadosh (to be holy)
+  'H6944': 'holy',          // קדש   — qodesh (holiness/holy)
+  'H2896': 'good',          // טוב   — tov
+  'H7227': 'great',         // רב    — rav (many/great)
+  'H3966': 'very',          // מאד   — me'od
+  'H996':  'between',       // בין   — beyn
+  'H5921': 'upon',          // על    — al
+  'H6440': 'face',          // פנים  — panim
+  // Proper names — standard English forms
+  'H4872': 'Moses',         // משה   — Mosheh
+  'H3478': 'Israel',        // ישראל — Yisrael
+  'H4714': 'Egypt',         // מצרים — Mitsrayim
+  'H175':  'Aaron',         // אהרן  — Aharon
+  'H85':   'Abraham',       // אברהם — Avraham
+  'H3327': 'Isaac',         // יצחק  — Yitschaq
+  'H3290': 'Jacob',         // יעקב  — Ya'akov
+  'H3063': 'Judah',         // יהודה — Yehudah
+  'H3130': 'Joseph',        // יוסף  — Yosef
+  'H1732': 'David',         // דוד   — David
+  // ── Greek (LXX STEPBible) ────────────────────────────────────────────────────
+  'G3588': 'the',           // ὁ/ἡ/τό — definite article
+  'G2316': 'God',           // θεός
+  'G2962': 'LORD',          // κύριος
+  'G1093': 'earth',         // γῆ
+  'G3772': 'heaven',        // οὐρανός
+  'G4655': 'darkness',      // σκότος
+  'G0012': 'abyss',         // ἄβυσσος
+  'G4151': 'spirit',        // πνεῦμα
+  'G5204': 'water',         // ὕδωρ
+  'G4160': 'made',          // ποιέω — "to do/make" → "made"
+  'G1510': 'was',           // εἰμί
+  'G0746': 'beginning',     // ἀρχή
+  'G2532': 'and',           // καί
+  'G3588': 'the',           // definite article (all forms)
+  'G3956': 'all',           // πᾶς — pas
+  'G1722': 'in',            // ἐν — en
+  'G4314': 'toward',        // πρός — pros
+  'G1909': 'upon',          // ἐπί — epi
+  'G3739': 'which',         // ὅς — relative pronoun
+  'G3778': 'this',          // οὗτος — houtos
+  'G3004': 'to say',        // λέγω — lego
+  'G2064': 'to come',       // ἔρχομαι — erchomai
+  'G1096': 'to become',     // γίνομαι — ginomai
+  'G3708': 'to see',        // ὁράω — horao
+  'G1325': 'to give',       // δίδωμι — didomi
+  'G2983': 'to take',       // λαμβάνω — lambano
+  'G0444': 'man',           // ἄνθρωπος — anthropos
+  'G5207': 'son',           // υἱός — huios
+  'G2250': 'day',           // ἡμέρα — hemera
+  'G1065': 'indeed',        // γε — ge (particle)
 };
 
 export function normalizeGloss(gloss: string, orig?: string, lemma?: string): string {
@@ -84,8 +174,8 @@ export function normalizeGloss(gloss: string, orig?: string, lemma?: string): st
 
   let g = gloss.trim();
 
-  // 3. Strip "properly," / "literally," / "viz." prefixes
-  g = g.replace(/^(properly|literally|viz\.?|i\.e\.?),?\s+/i, '');
+  // 3. Strip "properly," / "perhaps properly," / "literally," / "viz." prefixes
+  g = g.replace(/^(perhaps\s+)?(properly|literally|viz\.?|i\.e\.?),?\s+/i, '');
 
   // 4. STEPBible LXX format: "the/this/who", "spirit/breath: spirit", "earth: planet"
   //    Take before ":" first (contextual qualifier), then before "/"
@@ -102,6 +192,7 @@ export function normalizeGloss(gloss: string, orig?: string, lemma?: string): st
   // 6. Remove scholarly qualifiers
   g = g.replace(/\bin the ordinary sense\b/gi, '').trim();
   g = g.replace(/\bin [a-z]+ sense\b/gi, '').trim();
+  g = g.replace(/\bused (?:very |quite )?\w+ as\b.*/gi, '').trim();
 
   // 7. Take first of semantic-range alternatives ("above, over, upon…" / "above; over; upon")
   g = g.split(/;\s*/)[0].trim();
