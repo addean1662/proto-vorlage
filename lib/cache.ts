@@ -47,7 +47,7 @@ export async function getCachedCount(): Promise<number> {
     ensureCacheDir();
     return fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.json')).length;
   }
-  const count = await getRedis().get<number>('__verse_count__');
+  const count = await getRedis().get('__verse_count__') as number | null;
   return count ?? 0;
 }
 
