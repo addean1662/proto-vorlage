@@ -1,0 +1,66 @@
+[
+  {
+    "name": "TBESG - Translators Brief lexicon of Extended Strongs for Greek - STEPBible.org CC BY.txt",
+    "path": "Lexicons/TBESG - Translators Brief lexicon of Extended Strongs for Greek - STEPBible.org CC BY.txt",
+    "sha": "efe271a1dbb73fa01f8fa6e0f164c6687757a9ae",
+    "size": 4736912,
+    "url": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TBESG%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Greek%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+    "html_url": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TBESG%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Greek%20-%20STEPBible.org%20CC%20BY.txt",
+    "git_url": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/efe271a1dbb73fa01f8fa6e0f164c6687757a9ae",
+    "download_url": "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/master/Lexicons/TBESG%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Greek%20-%20STEPBible.org%20CC%20BY.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TBESG%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Greek%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+      "git": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/efe271a1dbb73fa01f8fa6e0f164c6687757a9ae",
+      "html": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TBESG%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Greek%20-%20STEPBible.org%20CC%20BY.txt"
+    }
+  },
+  {
+    "name": "TBESH - Translators Brief lexicon of Extended Strongs for Hebrew - STEPBible.org CC BY.txt",
+    "path": "Lexicons/TBESH - Translators Brief lexicon of Extended Strongs for Hebrew - STEPBible.org CC BY.txt",
+    "sha": "a64990a674d13245ae1e9ed426bc69197c2fbad5",
+    "size": 3288045,
+    "url": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TBESH%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Hebrew%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+    "html_url": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TBESH%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Hebrew%20-%20STEPBible.org%20CC%20BY.txt",
+    "git_url": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/a64990a674d13245ae1e9ed426bc69197c2fbad5",
+    "download_url": "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/master/Lexicons/TBESH%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Hebrew%20-%20STEPBible.org%20CC%20BY.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TBESH%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Hebrew%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+      "git": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/a64990a674d13245ae1e9ed426bc69197c2fbad5",
+      "html": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TBESH%20-%20Translators%20Brief%20lexicon%20of%20Extended%20Strongs%20for%20Hebrew%20-%20STEPBible.org%20CC%20BY.txt"
+    }
+  },
+  {
+    "name": "TFLSJ  0-5624 - Translators Formatted full LSJ Bible lexicon - STEPBible.org CC BY.txt",
+    "path": "Lexicons/TFLSJ  0-5624 - Translators Formatted full LSJ Bible lexicon - STEPBible.org CC BY.txt",
+    "sha": "db44789a0b3523ad00ba2c93c6fe78ad3db1b4bb",
+    "size": 23831837,
+    "url": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TFLSJ%20%200-5624%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+    "html_url": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TFLSJ%20%200-5624%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt",
+    "git_url": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/db44789a0b3523ad00ba2c93c6fe78ad3db1b4bb",
+    "download_url": "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/master/Lexicons/TFLSJ%20%200-5624%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TFLSJ%20%200-5624%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+      "git": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/db44789a0b3523ad00ba2c93c6fe78ad3db1b4bb",
+      "html": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TFLSJ%20%200-5624%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt"
+    }
+  },
+  {
+    "name": "TFLSJ extra - Translators Formatted full LSJ Bible lexicon - STEPBible.org CC BY.txt",
+    "path": "Lexicons/TFLSJ extra - Translators Formatted full LSJ Bible lexicon - STEPBible.org CC BY.txt",
+    "sha": "cee6c1207d68beac2fcd66a7dbbd798803658e73",
+    "size": 8377070,
+    "url": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TFLSJ%20extra%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+    "html_url": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TFLSJ%20extra%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt",
+    "git_url": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/cee6c1207d68beac2fcd66a7dbbd798803658e73",
+    "download_url": "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/master/Lexicons/TFLSJ%20extra%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/STEPBible/STEPBible-Data/contents/Lexicons/TFLSJ%20extra%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt?ref=master",
+      "git": "https://api.github.com/repos/STEPBible/STEPBible-Data/git/blobs/cee6c1207d68beac2fcd66a7dbbd798803658e73",
+      "html": "https://github.com/STEPBible/STEPBible-Data/blob/master/Lexicons/TFLSJ%20extra%20-%20Translators%20Formatted%20full%20LSJ%20Bible%20lexicon%20-%20STEPBible.org%20CC%20BY.txt"
+    }
+  }
+]

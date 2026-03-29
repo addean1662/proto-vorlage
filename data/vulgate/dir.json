@@ -1,0 +1,338 @@
+[
+  {
+    "name": ".DS_Store",
+    "path": ".DS_Store",
+    "sha": "bce6881890f62bf02737c299b6282718349da501",
+    "size": 8196,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/.DS_Store?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/.DS_Store",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/bce6881890f62bf02737c299b6282718349da501",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/.DS_Store",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/.DS_Store?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/bce6881890f62bf02737c299b6282718349da501",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/.DS_Store"
+    }
+  },
+  {
+    "name": ".gitignore",
+    "path": ".gitignore",
+    "sha": "ad0006506645f06cdcdcb1c1e45112bbe6093540",
+    "size": 228,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/.gitignore?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/.gitignore",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/ad0006506645f06cdcdcb1c1e45112bbe6093540",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/.gitignore",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/.gitignore?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/ad0006506645f06cdcdcb1c1e45112bbe6093540",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/.gitignore"
+    }
+  },
+  {
+    "name": ".travis-ci.sh",
+    "path": ".travis-ci.sh",
+    "sha": "5636a405d992675a7f8b3d3daffe4d7628ac7f66",
+    "size": 28,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/.travis-ci.sh?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/.travis-ci.sh",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/5636a405d992675a7f8b3d3daffe4d7628ac7f66",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/.travis-ci.sh",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/.travis-ci.sh?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/5636a405d992675a7f8b3d3daffe4d7628ac7f66",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/.travis-ci.sh"
+    }
+  },
+  {
+    "name": ".travis.yml",
+    "path": ".travis.yml",
+    "sha": "2a4e371e5c78393459aeebcff3c318b4da8babec",
+    "size": 650,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/.travis.yml?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/.travis.yml",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/2a4e371e5c78393459aeebcff3c318b4da8babec",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/.travis.yml",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/.travis.yml?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/2a4e371e5c78393459aeebcff3c318b4da8babec",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/.travis.yml"
+    }
+  },
+  {
+    "name": "ADDONS.LAT",
+    "path": "ADDONS.LAT",
+    "sha": "314df4e06e28da2ecf040f601f3d898b8343ee2c",
+    "size": 34697,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/ADDONS.LAT?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/ADDONS.LAT",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/314df4e06e28da2ecf040f601f3d898b8343ee2c",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/ADDONS.LAT",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/ADDONS.LAT?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/314df4e06e28da2ecf040f601f3d898b8343ee2c",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/ADDONS.LAT"
+    }
+  },
+  {
+    "name": "DICTLINE.GEN",
+    "path": "DICTLINE.GEN",
+    "sha": "8cfcc3036218670ef7ce1aaf2ce1ed62ed0767ff",
+    "size": 6116308,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/DICTLINE.GEN?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/DICTLINE.GEN",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/8cfcc3036218670ef7ce1aaf2ce1ed62ed0767ff",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/DICTLINE.GEN",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/DICTLINE.GEN?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/8cfcc3036218670ef7ce1aaf2ce1ed62ed0767ff",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/DICTLINE.GEN"
+    }
+  },
+  {
+    "name": "HOWTO.txt",
+    "path": "HOWTO.txt",
+    "sha": "d4c7ae2ffeb3cd7de786b37f6c3d1ee5ec0b9e8b",
+    "size": 23431,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/HOWTO.txt?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/HOWTO.txt",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/d4c7ae2ffeb3cd7de786b37f6c3d1ee5ec0b9e8b",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/HOWTO.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/HOWTO.txt?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/d4c7ae2ffeb3cd7de786b37f6c3d1ee5ec0b9e8b",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/HOWTO.txt"
+    }
+  },
+  {
+    "name": "INFLECTS.LAT",
+    "path": "INFLECTS.LAT",
+    "sha": "ce6278ffa8de323b413108496b4eecba167dcc63",
+    "size": 128231,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/INFLECTS.LAT?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/INFLECTS.LAT",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/ce6278ffa8de323b413108496b4eecba167dcc63",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/INFLECTS.LAT",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/INFLECTS.LAT?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/ce6278ffa8de323b413108496b4eecba167dcc63",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/INFLECTS.LAT"
+    }
+  },
+  {
+    "name": "LICENCE.txt",
+    "path": "LICENCE.txt",
+    "sha": "66dc9fd1c2345e59d1a15db2f336e0034a53a9e4",
+    "size": 696,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/LICENCE.txt?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/LICENCE.txt",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/66dc9fd1c2345e59d1a15db2f336e0034a53a9e4",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/LICENCE.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/LICENCE.txt?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/66dc9fd1c2345e59d1a15db2f336e0034a53a9e4",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/LICENCE.txt"
+    }
+  },
+  {
+    "name": "Makefile",
+    "path": "Makefile",
+    "sha": "439895f632157e4870e658c59d3fb5894c912cc2",
+    "size": 3258,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/Makefile?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/Makefile",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/439895f632157e4870e658c59d3fb5894c912cc2",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/Makefile",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/Makefile?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/439895f632157e4870e658c59d3fb5894c912cc2",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/Makefile"
+    }
+  },
+  {
+    "name": "README.md",
+    "path": "README.md",
+    "sha": "4d99063fdcaed6038fb8679f501379490d046491",
+    "size": 2095,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/README.md?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/README.md",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/4d99063fdcaed6038fb8679f501379490d046491",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/README.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/README.md?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/4d99063fdcaed6038fb8679f501379490d046491",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/README.md"
+    }
+  },
+  {
+    "name": "UNIQUES.LAT",
+    "path": "UNIQUES.LAT",
+    "sha": "a5c4503e7185c01cbe33ed6ef171a382b3a2df00",
+    "size": 9067,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/UNIQUES.LAT?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/UNIQUES.LAT",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/a5c4503e7185c01cbe33ed6ef171a382b3a2df00",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/UNIQUES.LAT",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/UNIQUES.LAT?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/a5c4503e7185c01cbe33ed6ef171a382b3a2df00",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/UNIQUES.LAT"
+    }
+  },
+  {
+    "name": "commands.gpr",
+    "path": "commands.gpr",
+    "sha": "2bbc277b04ac87d49e2f038f4a0af664649cc639",
+    "size": 473,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/commands.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/commands.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/2bbc277b04ac87d49e2f038f4a0af664649cc639",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/commands.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/commands.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/2bbc277b04ac87d49e2f038f4a0af664649cc639",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/commands.gpr"
+    }
+  },
+  {
+    "name": "latin_utils.gpr",
+    "path": "latin_utils.gpr",
+    "sha": "bfdc1aeaade89ffac46d76fec4aa3311d6b1c736",
+    "size": 756,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/latin_utils.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/latin_utils.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/bfdc1aeaade89ffac46d76fec4aa3311d6b1c736",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/latin_utils.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/latin_utils.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/bfdc1aeaade89ffac46d76fec4aa3311d6b1c736",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/latin_utils.gpr"
+    }
+  },
+  {
+    "name": "shared.gpr",
+    "path": "shared.gpr",
+    "sha": "4bfbf74d507e86c57b3e2c7dabdbaa4495681387",
+    "size": 1107,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/shared.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/shared.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/4bfbf74d507e86c57b3e2c7dabdbaa4495681387",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/shared.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/shared.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/4bfbf74d507e86c57b3e2c7dabdbaa4495681387",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/shared.gpr"
+    }
+  },
+  {
+    "name": "src",
+    "path": "src",
+    "sha": "08e6b05c5f132818a6de65da6031297289666aec",
+    "size": 0,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/src?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/tree/master/src",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/trees/08e6b05c5f132818a6de65da6031297289666aec",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/src?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/trees/08e6b05c5f132818a6de65da6031297289666aec",
+      "html": "https://github.com/mk270/whitakers-words/tree/master/src"
+    }
+  },
+  {
+    "name": "stemlist-sort.txt",
+    "path": "stemlist-sort.txt",
+    "sha": "e83100eee6c8c6f2a2dd66f374a447cf0d8052bb",
+    "size": 88,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/stemlist-sort.txt?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/stemlist-sort.txt",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/e83100eee6c8c6f2a2dd66f374a447cf0d8052bb",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/stemlist-sort.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/stemlist-sort.txt?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/e83100eee6c8c6f2a2dd66f374a447cf0d8052bb",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/stemlist-sort.txt"
+    }
+  },
+  {
+    "name": "support_utils.gpr",
+    "path": "support_utils.gpr",
+    "sha": "6050e51f8c91657f88a1f602236d25999796bfb0",
+    "size": 786,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/support_utils.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/support_utils.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/6050e51f8c91657f88a1f602236d25999796bfb0",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/support_utils.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/support_utils.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/6050e51f8c91657f88a1f602236d25999796bfb0",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/support_utils.gpr"
+    }
+  },
+  {
+    "name": "test",
+    "path": "test",
+    "sha": "33ac683c58f658148a814c9e60f7ac8e693fe6db",
+    "size": 0,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/test?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/tree/master/test",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/trees/33ac683c58f658148a814c9e60f7ac8e693fe6db",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/test?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/trees/33ac683c58f658148a814c9e60f7ac8e693fe6db",
+      "html": "https://github.com/mk270/whitakers-words/tree/master/test"
+    }
+  },
+  {
+    "name": "tools.gpr",
+    "path": "tools.gpr",
+    "sha": "274f0beaa36a9e08bf76dcc142ab629155988bbe",
+    "size": 690,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/tools.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/tools.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/274f0beaa36a9e08bf76dcc142ab629155988bbe",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/tools.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/tools.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/274f0beaa36a9e08bf76dcc142ab629155988bbe",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/tools.gpr"
+    }
+  },
+  {
+    "name": "words_engine.gpr",
+    "path": "words_engine.gpr",
+    "sha": "b4a32e1b986994de9edb961ec2fc34a36ba03edd",
+    "size": 785,
+    "url": "https://api.github.com/repos/mk270/whitakers-words/contents/words_engine.gpr?ref=master",
+    "html_url": "https://github.com/mk270/whitakers-words/blob/master/words_engine.gpr",
+    "git_url": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/b4a32e1b986994de9edb961ec2fc34a36ba03edd",
+    "download_url": "https://raw.githubusercontent.com/mk270/whitakers-words/master/words_engine.gpr",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/mk270/whitakers-words/contents/words_engine.gpr?ref=master",
+      "git": "https://api.github.com/repos/mk270/whitakers-words/git/blobs/b4a32e1b986994de9edb961ec2fc34a36ba03edd",
+      "html": "https://github.com/mk270/whitakers-words/blob/master/words_engine.gpr"
+    }
+  }
+]
