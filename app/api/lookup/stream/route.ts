@@ -38,6 +38,7 @@ type DisplayWordEntry = {
 type DisplayDSSEntry = {
   orig: string;
   eng: string;
+  def?: string;
   frag: string | null;
   status: 'extant' | 'partial' | 'lost';
   paleo: boolean;
@@ -83,7 +84,7 @@ function assembleDisplayRow(
   if ('mt_idx' in raw) {
     const idx = raw.mt_idx;
     mt = (idx !== null && idx !== undefined && mtWords && mtWords[idx])
-      ? { orig: mtWords[idx].orig, eng: normalizeGloss(mtWords[idx].eng, mtWords[idx].orig, mtWords[idx].lemma ?? undefined), xlit: mtWords[idx].xlit, def: mtWords[idx].def, lemma: mtWords[idx].lemma ?? undefined }
+      ? { orig: mtWords[idx].orig, eng: normalizeGloss(mtWords[idx].eng, mtWords[idx].orig, mtWords[idx].lemma ?? undefined), xlit: mtWords[idx].xlit, def: mtWords[idx].def ?? mtWords[idx].eng, lemma: mtWords[idx].lemma ?? undefined }
       : DASH;
   } else {
     mt = raw.mt ?? DASH;
@@ -306,7 +307,8 @@ export async function POST(request: NextRequest): Promise<Response> {
           const eng = matched
             ? normalizeGloss(matched.eng, dss.orig, matched.lemma ?? undefined)
             : normalizeGloss(dss.eng, dss.orig);
-          return { ...row, dss: { ...dss, eng } };
+          const def = matched?.eng ?? dss.eng;
+          return { ...row, dss: { ...dss, eng, def } };
         }
         return row;
       });
