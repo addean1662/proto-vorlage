@@ -451,7 +451,14 @@ export function normalizeGloss(gloss: string, orig?: string, lemma?: string): st
   if (!gloss || gloss === '[no gloss]') return gloss;
 
   // 1. Lemma override — most authoritative
-  if (lemma && LEMMA_OVERRIDES[lemma]) return LEMMA_OVERRIDES[lemma];
+  if (lemma && LEMMA_OVERRIDES[lemma]) {
+    const override = LEMMA_OVERRIDES[lemma];
+    // Preserve Hebrew morphological prefix prepositions (ב=in, מ=from, כ=like)
+    // stored at the start of the raw gloss by the build script (e.g. "in the first…" → "in beginning")
+    const prefixMatch = gloss.match(/^(in|from|like)\s+/i);
+    if (prefixMatch) return `${prefixMatch[1].toLowerCase()} ${override}`;
+    return override;
+  }
 
   // 2. Particle map — exact orig match, then strip-points match for Hebrew
   if (orig) {

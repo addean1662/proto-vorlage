@@ -110,6 +110,7 @@ SEMANTIC ALIGNMENT — this is meaning-based, NOT position-based:
 - If a Greek or Latin word has no Hebrew equivalent (genuine addition), it gets its own row with ${useMTIdx ? 'mt_idx: null' : 'mt orig "—"'}.
 - The Hebrew conjunction prefix (ו-) baked into a verb form is NOT a separate MT word. If the Greek has a standalone καί or the Latin has "et" for that prefix, they are additions — give them their own row with ${useMTIdx ? 'mt_idx: null' : 'mt "—"'}.
 - Greek definite articles (ὁ, ἡ, τό, τόν, τήν, τοῦ, τῆς, τοῖς, τῇ, τῶν, etc.) ALWAYS get mt_idx: null — Hebrew expresses definiteness with a prefix (ה-) baked into the noun word, never a separate word. Put the article on its own row (mt_idx: null), then put the NOUN it modifies on the same row as the corresponding Hebrew noun.
+- Hebrew morphological prefixes (ב=in/by, ל=to/for, מ=from, כ=like) are NOT separate words — they are baked into the Hebrew token (e.g. בְּרֵאשִׁית = "in beginning" as one word). When the LXX or Vulgate expresses such a prefix as a standalone word (ἐν for ב, In/in for ב, ἐκ/ἀπό for מ), that standalone preposition gets mt_idx: null on its own row. The Hebrew word itself goes on the same row as the corresponding content noun (ἀρχῇ / principio, NOT ἐν / In).
 
 WORD COVERAGE (non-negotiable):
 ${coverageNote}
