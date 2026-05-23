@@ -164,7 +164,7 @@ export interface DSSWord {
   eng: string;
   manuscripts?: string[];
   frag?: string | null;
-  status: 'extant' | 'partial' | 'lost';
+  status: 'extant' | 'attested' | 'partial' | 'lost';
   paleo?: boolean;
 }
 

@@ -3,29 +3,14 @@
 import { useState } from 'react';
 
 interface DSSBadgeProps {
-  status: 'extant' | 'partial' | 'lost';
+  status: 'lost';
   frag: string | null;
 }
 
-export default function DSSBadge({ status, frag }: DSSBadgeProps) {
+export default function DSSBadge({ frag }: DSSBadgeProps) {
   const [hovered, setHovered] = useState(false);
 
-  const colorMap = {
-    extant: '#4ade80',   // green
-    partial: '#fbbf24',  // amber
-    lost:    '#f87171',  // red
-  };
-
-  const labelMap = {
-    extant: 'Extant',
-    partial: 'Partial',
-    lost:    'Lost',
-  };
-
-  const color = colorMap[status];
-  const label = labelMap[status];
-  const tooltipBase = status === 'lost' ? 'Lost — not preserved in any known scroll' : label;
-  const tooltip = frag ? `${tooltipBase} — ${frag}` : tooltipBase;
+  const tooltip = 'Lost — not preserved in any known scroll';
 
   return (
     <span
@@ -35,7 +20,7 @@ export default function DSSBadge({ status, frag }: DSSBadgeProps) {
     >
       <span
         className="inline-block w-2 h-2 rounded-full flex-shrink-0"
-        style={{ backgroundColor: color }}
+        style={{ backgroundColor: '#f87171' }}
       />
       {hovered && (
         <span

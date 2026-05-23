@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import DSSBadge from './DSSBadge';
 import { transliterateHebrew, transliterateGreek } from '@/lib/transliterate';
+import { DSS_FRAG_DATES } from '@/lib/dss-dates';
 
 interface WordEntry {
   orig: string;
@@ -15,7 +16,7 @@ interface WordEntry {
 
 interface DSSEntry extends WordEntry {
   frag: string | null;
-  status: 'extant' | 'partial' | 'lost';
+  status: 'extant' | 'attested' | 'partial' | 'lost';
   paleo?: boolean;
 }
 
@@ -78,42 +79,42 @@ function HoverTooltip({ children, content }: { children: React.ReactNode; conten
 
 // Column order: DSS | LXX | VUL | MT
 const COLUMNS = [
-  { key: 'dss', color: '#c4a882', isHebrew: true },
-  { key: 'lxx', color: '#7ea8be', isHebrew: false },
-  { key: 'vul', color: '#a8b896', isHebrew: false },
-  { key: 'mt',  color: '#d4a574', isHebrew: true },
+  { key: 'dss', color: '#c4a882', isHebrew: true,  lexicon: null },
+  { key: 'lxx', color: '#7ea8be', isHebrew: false, lexicon: 'STEPBible TBESG (Rahlfs 1935)' },
+  { key: 'vul', color: '#a8b896', isHebrew: false, lexicon: 'DICTLINE / Stuttgart Vulgate (Weber-Gryson 5th ed.)' },
+  { key: 'mt',  color: '#d4a574', isHebrew: true,  lexicon: 'OSHB / BDB (Westminster Leningrad Codex)' },
 ] as const;
 
 function Cell({
   entry,
   color,
   isHebrew,
+  lexicon,
   dssEntry,
   isFirst,
   animateDSS,
-  suppressDSSBadge,
 }: {
   entry: WordEntry;
   color: string;
   isHebrew: boolean;
+  lexicon: string | null;
   dssEntry?: DSSEntry;
   isFirst: boolean;
   animateDSS?: boolean;
-  suppressDSSBadge?: boolean;
 }) {
-  const isLost = !suppressDSSBadge && dssEntry?.status === 'lost';
+  const isLost = dssEntry?.status === 'lost';
   const isDash = !isLost && (entry.orig === '—' || entry.orig === '-');
+  const isAttested = dssEntry?.status === 'attested';
   const dimmed = isDash || isLost;
 
-  // Lost DSS cell — centered "(lost)" label with red dot, no gloss
-  if (isLost) {
+  // Attested DSS cell — scroll covers this verse but no transcription entered yet.
+  // Show siglum only; no dot, no text. The blank signals nothing has been entered.
+  if (isAttested) {
     return (
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6,
           padding: '8px 14px',
           background: '#0f0d0a',
           borderBottom: '1px solid rgba(200,170,120,.04)',
@@ -122,21 +123,51 @@ function Cell({
           ...(animateDSS ? { animation: 'dss-reveal 300ms ease-out forwards' } : {}),
         }}
       >
-        {!suppressDSSBadge && (
-          <>
-            <span
-              style={{
-                fontSize: 13,
-                color: 'rgba(176,96,96,.4)',
-                fontStyle: 'italic',
-                fontFamily: "var(--font-garamond), 'EB Garamond', serif",
-              }}
-            >
-              (lost)
-            </span>
-            <DSSBadge status="lost" frag={null} />
-          </>
-        )}
+        <div style={{ flex: '1 1 50%' }} />
+        <div style={{ flex: '1 1 50%', paddingLeft: 10 }}>
+          {dssEntry!.frag && (() => {
+            const info = DSS_FRAG_DATES[dssEntry!.frag!];
+            const sigLabel = `${dssEntry!.frag}${dssEntry!.paleo ? ' · paleo' : ''}`;
+            const tooltipContent = info
+              ? <span>{info.date}<br />{info.source}</span>
+              : null;
+            return (
+              <HoverTooltip content={tooltipContent}>
+                <span style={{
+                  display: 'block',
+                  fontSize: 10,
+                  color: 'rgba(200,180,150,.35)',
+                  fontFamily: "var(--font-garamond), 'EB Garamond', serif",
+                  lineHeight: 1.2,
+                  cursor: tooltipContent ? 'default' : undefined,
+                }}>
+                  {sigLabel}
+                </span>
+              </HoverTooltip>
+            );
+          })()}
+        </div>
+      </div>
+    );
+  }
+
+  // Lost DSS cell — red dot signals absence. No text; the dot is the message.
+  if (isLost) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '8px 14px',
+          background: '#0f0d0a',
+          borderBottom: '1px solid rgba(200,170,120,.04)',
+          borderLeft: isFirst ? 'none' : '1px solid rgba(200,170,120,.06)',
+          minHeight: 48,
+          ...(animateDSS ? { animation: 'dss-reveal 300ms ease-out forwards' } : {}),
+        }}
+      >
+        <DSSBadge status="lost" frag={null} />
       </div>
     );
   }
@@ -154,7 +185,12 @@ function Cell({
       <span>
         {entry.lemma && <span style={{ opacity: .6, display: 'block', marginBottom: 4 }}>{entry.lemma}</span>}
         {entry.strongs && <span style={{ opacity: .6, display: 'block', marginBottom: 4 }}>{entry.strongs}</span>}
-        {entry.def}
+        <span style={{ display: 'block' }}>{entry.def}</span>
+        {lexicon && (
+          <span style={{ opacity: .5, display: 'block', marginTop: 6, fontSize: 11 }}>
+            {lexicon}
+          </span>
+        )}
       </span>
     )
     : null;
@@ -198,22 +234,9 @@ function Cell({
         </HoverTooltip>
       </div>
 
-      {/* STATUS DOT: absolutely positioned at the exact horizontal center of the cell */}
-      {!suppressDSSBadge && dssEntry && !isDash && dssEntry.status && (
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 1,
-        }}>
-          <DSSBadge status={dssEntry.status} frag={dssEntry.frag} />
-        </div>
-      )}
-
       {/* RIGHT HALF: gloss — left-aligned from center, siglum shown before gloss */}
       <div style={{ flex: '1 1 50%', paddingLeft: 10 }}>
-        {!suppressDSSBadge && dssEntry && !isDash && dssEntry.frag && (
+        {dssEntry && !isDash && dssEntry.frag && (
           <span style={{
             display: 'block',
             fontSize: 10,
@@ -256,18 +279,16 @@ export default function WordRow({ row, index, animateDSS }: WordRowProps) {
       {COLUMNS.map((col, ci) => {
         const entry = row[col.key] as WordEntry;
         const dssEntry = col.key === 'dss' ? (row.dss as DSSEntry) : undefined;
-        const isDash = (o: string) => o === '—' || o === '-';
-        const suppressDSSBadge = col.key === 'dss' && isDash(row.mt.orig);
         return (
           <Cell
             key={col.key}
             entry={entry}
             color={col.color}
             isHebrew={col.isHebrew}
+            lexicon={col.lexicon}
             dssEntry={dssEntry}
             isFirst={ci === 0}
             animateDSS={animateDSS && col.key === 'dss'}
-            suppressDSSBadge={suppressDSSBadge}
           />
         );
       })}

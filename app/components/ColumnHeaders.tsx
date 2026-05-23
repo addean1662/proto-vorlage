@@ -1,10 +1,10 @@
 'use client';
 
 const COLUMNS = [
-  { key: 'dss', label: 'Dead Sea Scrolls', script: 'Hebrew', date: 'c. 300 BCE', color: '#c4a882' },
-  { key: 'lxx', label: 'Septuagint',       script: 'Greek',  date: 'c. 300 BCE', color: '#7ea8be' },
-  { key: 'vul', label: 'Vulgate',          script: 'Latin',  date: 'c. 400 CE',  color: '#a8b896' },
-  { key: 'mt',  label: 'Masoretic Text',   script: 'Hebrew', date: 'c. 600 CE',  color: '#d4a574' },
+  { key: 'dss', label: 'Dead Sea Scrolls', script: 'Hebrew', date: 'c. 250 BCE–68 CE', color: '#c4a882' },
+  { key: 'lxx', label: 'Septuagint',       script: 'Greek',  date: 'c. 280–150 BCE', color: '#7ea8be' },
+  { key: 'vul', label: 'Vulgate',          script: 'Latin',  date: 'c. 382–405 CE', color: '#a8b896' },
+  { key: 'mt',  label: 'Masoretic Text',   script: 'Hebrew', date: 'c. 700–900 CE',  color: '#d4a574' },
 ];
 
 export default function ColumnHeaders() {

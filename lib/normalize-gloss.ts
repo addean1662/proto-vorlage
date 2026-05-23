@@ -213,6 +213,12 @@ const LEMMA_OVERRIDES: Record<string, string> = {
   'G4655': 'darkness',  // σκότος
   'G5204': 'water',     // ὕδωρ
   'G5207': 'son',       // υἱός
+  'G2992': 'people',    // λαός
+  // ── Greek (LXX-specific corrections per NETS audit) ─────────────────────
+  'G4733': 'firmament', // στερέωμα  — TBESG: "firmness" (poor gloss; all LXX trs. use "firmament")
+  'G5458': 'luminary',  // φωστήρ    — TBESG: "light" (conflates φωστήρ with φῶς; NETS: "luminary")
+  'G3857': 'garden',    // παράδεισος — TBESG: "paradise" (anachronistic; NETS: "orchard")
+  'G2062': 'creeping thing', // ἑρπετόν — TBESG: "reptile" (too narrow; NETS: "creeping thing")
 };
 
 // Greek word-form overrides for LXX entries that lack a Strong's number.
@@ -226,6 +232,11 @@ const GREEK_FORMS: Record<string, string> = {
   'Ισμαηλ': 'Ishmael',     'Ναβαιωθ': 'Nebaioth',   'Αιλων': 'Elon',
   'Ιωβαβ': 'Jobab',        'Μελχα': 'Milcah',        'Σερουχ': 'Serug',
   'Ελιβεμα': 'Oholibamah', 'Ελιβεμας': 'Oholibamah','Λωταν': 'Lotan',
+  'Αμαληκ': 'Amalek',      'Ιαφεθ': 'Japheth',       'Χαμ': 'Ham',
+  'Ελιφας': 'Eliphaz',     'Θαμνα': 'Timna',         'Βασεμμαθ': 'Basemath',
+  'Σεβεγων': 'Zibeon',     'Ανα': 'Anah',            'Ιαμιν': 'Jamin',
+  'Χοδολλογομορ': 'Chedorlaomer', 'Αραδ': 'Arad',   'Σηλωμ': 'Shelah',
+  'Οζιηλ': 'Uzziel',       'Διναν': 'Dinan',
   'Δησων': 'Dishan',       'Σωβαλ': 'Shobal',        'Κενεζ': 'Kenaz',
   'Χορρι': 'Horite',       'Αδα': 'Adah',            'Αδας': 'Adah',
   'Σελλα': 'Zillah',       'Θοβελ': 'Tubal-cain',   'Βεωρ': 'Beor',
@@ -445,10 +456,465 @@ const GREEK_FORMS: Record<string, string> = {
   'παρθένια': 'maidenhood',
   'φαιὸν': 'speckled',      'διάλευκον': 'striped',       'διαλεύκους': 'striped',
   'ἐνταῦθα': 'here',
+  // ── Gender / human vocabulary ─────────────────────────────────────────────
+  'ἀρσενικόν': 'male',     'ἀρσενικὸν': 'male',        'ἀρσενικά': 'male',
+  'ἀρσενικὰ': 'male',      'ἀρσενικοῦ': 'male',        'ἀρσενικῷ': 'male',
+  'νεάνιδι': 'girl',       'νεᾶνιν': 'girl',            'νεᾶνις': 'girl',
+  // ── Head / top / summit ───────────────────────────────────────────────────
+  'κορυφῆς': 'head',       'κορυφὴν': 'head',           'κορυφή': 'head',
+  'κορυφήν': 'head',       'κορυφαί': 'heads',          'κορυφαῖς': 'heads',
+  // ── Idolatry / images ─────────────────────────────────────────────────────
+  'γλυπτὰ': 'idols',       'γλυπτὸν': 'idol',           'γλυπτόν': 'idol',
+  'γλυπτά': 'idols',       'γλυπτοῦ': 'idol',           'γλυπτοῖς': 'idols',
+  // ── Weaving / textile ─────────────────────────────────────────────────────
+  'κρόκῃ': 'warp',         'κρόκην': 'warp',             'κρόκον': 'warp',
+  'στήμονι': 'warp thread','στήμονα': 'warp thread',     'στήμων': 'warp thread',
+  'ποικιλτοῦ': 'embroiderer','ποικιλτής': 'embroiderer',
+  // ── Fractions / fifths ────────────────────────────────────────────────────
+  'ἐπίπεμπτον': 'fifth part','ἐπίπεμπτα': 'fifth parts','ἐπιπέμπτου': 'fifth part',
+  // ── Violence / crime ─────────────────────────────────────────────────────
+  'φονευτής': 'murderer',  'φονευτοῦ': 'murderer',      'φονευτάς': 'murderers',
+  // ── Rebuke / proof ───────────────────────────────────────────────────────
+  'ἐλεγμοῦ': 'rebuke',     'ἐλεγμόν': 'rebuke',         'ἐλεγμός': 'rebuke',
+  // ── Exchange / commerce ──────────────────────────────────────────────────
+  'ἄλλαγμα': 'exchange',   'ἀλλάγματα': 'exchanges',    'πράσεως': 'sale',
+  // ── Purity / misc ────────────────────────────────────────────────────────
+  'διατήρησιν': 'observance','συμβολήν': 'meeting point','δειλινόν': 'evening',
+  'κοτύλην': 'cotyle',     'πλινθείας': 'brick-making',
+  'τραυματίου': 'wounded',  'Αμορραίου': 'Amorite',
+  // ── Genesis — Table of Nations (Gen 10) ───────────────────────────────────
+  'Γαμερ': 'Gomer',         'Ιωυαν': 'Javan',           'Ελισα': 'Elishah',
+  'Μοσοχ': 'Meshech',       'Μεσραιμ': 'Mizraim',        'Νεβρωδ': 'Nimrod',
+  'Ευιλα': 'Havilah',       'Σαβαθα': 'Sabtah',          'Ρεγμα': 'Raamah',
+  'Ροωβωθ': 'Rehoboth',     'Χαλαχ': 'Calah',            'Ως': 'Uz',
+  'Μασση': 'Massa',
+  // ── Genesis — Primeval history / early genealogies ────────────────────────
+  'Ευιλατ': 'Havilah',      'Γαιδαδ': 'Irad',            'Μαιηλ': 'Mehujael',
+  'γίγαντες': 'giants',     'ὀνομαστοί': 'renowned',     'καταρράκται': 'floodgates',
+  'ἑξακοσιοστῷ': 'six hundredth',
+  // ── Genesis — Patriarchal narrative (Gen 11–24) ───────────────────────────
+  'Σαραν': 'Haran',          'Βαραδ': 'Bered',            'Σααρ': 'Zoar',
+  'κυνηγὸς': 'hunter',
+  // ── Genesis — Esau's clan / Seir genealogy (Gen 36) ─────────────────────
+  'Ιεους': 'Jeush',          'Ιεγλομ': 'Jalam',           'Σωφαρ': 'Zepho',
+  'Ασαρ': 'Ezer',            'Ρισων': 'Dishan',            'Ασομ': 'Husham',
+  'Χασβι': 'Chezib',         'Ασεννεθ': 'Asenath',
+  // ── Genesis — Joseph narrative (Gen 37–50) ───────────────────────────────
+  'κάρπιμον': 'fruit-bearing','στεάτων': 'fat',
+  // ── Exodus — Vocabulary ───────────────────────────────────────────────────
+  'ἀναβάτας': 'horsemen',    'ἀναβάτην': 'horseman',      'φαῦσιν': 'illumination',
+  'συνάψεις': 'loops',       'συνάψητε': 'join',          'ὑφάντου': 'weaver',
+  'ὑφάντης': 'weaver',       'διανενησμένου': 'braided',   'ἀσπιδίσκας': 'rosettes',
+  'ἀσπιδίσκη': 'rosette',    'κατακαύματος': 'burn mark',  'περικύκλῳ': 'around',
+  'ἐξαρχόντων': 'singers',   'ἐγκαθημένοις': 'inhabitants',
+  // ── Leviticus — Vocabulary ───────────────────────────────────────────────
+  'πένηται': 'poor',          'πένης': 'poor',              'φυλάγματα': 'watches',
+  'προσκειμένων': 'adjoining','προσκειμένῳ': 'adjoining',
+  // ── Numbers — Proper nouns ───────────────────────────────────────────────
+  'Αραβωθ': 'Araboth',        'Οφερ': 'Hepher',             'Σαμι': 'Shami',
+  'Ετεβαθα': 'Taberah',
+  // ── Numbers — Vocabulary ────────────────────────────────────────────────
+  'διεμβαλοῦσιν': 'insert',   'ἐπικαταρωμένου': 'cursed',   'ἐπικαταρώμενον': 'cursed',
+  'κατάβρωμα': 'prey',         'πρέσβεις': 'messengers',     'ἄρασαί': 'curse',
+  'μονοκέρωτος': 'wild ox',    'ἐχθραίνετε': 'be hostile',
+  'ὁρισμοὺς': 'boundaries',   'ὁρισμοὶ': 'boundaries',      'ὁρισμός': 'boundary',
+  'ὁρισμοί': 'boundaries',
+  // ── Deuteronomy — Vocabulary ────────────────────────────────────────────
+  'ἐξέτριψαν': 'destroy',
+  // ── Genesis 4–9 — Early history (additional forms) ───────────────────────
+  'συνέπεσεν': 'fell',          'στένων': 'groaning',          'ὠσφράνθη': 'smelled',
+  'ἐπεκράτει': 'prevailed',     'ἐνεδίδου': 'was abating',
+  // ── Genesis 11–13 — Additional places ────────────────────────────────────
+  'Γεραρα': 'Gerar',            'Αγγαι': 'Ai',
+  // ── Genesis 14 — Battle of the kings ─────────────────────────────────────
+  'Αμαρφαλ': 'Amraphel',        'Αριωχ': 'Arioch',             'Ελλασαρ': 'Ellasar',
+  'Θαργαλ': 'Tidal',            'Ασταρωθ': 'Ashteroth',        'Σαυη': 'Shaveh',
+  'Εσχωλ': 'Eshcol',            'γίγαντας': 'giants',
+  'παρετάξαντο': 'battle',      'κοιλάδι': 'valley',           'ἀπῴχοντο': 'departed',
+  // ── Genesis — Oak tree forms ──────────────────────────────────────────────
+  'δρῦν': 'oak',                'δρυὶ': 'oak',                  'δρυός': 'oak',
+  // ── Genesis 15–22 — Abraham narratives ───────────────────────────────────
+  'τριετίζουσαν': 'three years old','βούτυρον': 'butter',      'σκέπην': 'shade',
+  'ἀορασίᾳ': 'blindness',       'ἐκτρῖψαι': 'destroy',         'ἀπεγαλακτίσθη': 'weaned',
+  'ἐπέσαξεν': 'saddled',        'Καμουηλ': 'Kemuel',
+  // ── Genesis 24–25 — Rebekah / Isaac / Keturah narratives ─────────────────
+  'ὑδρεύσομαι': 'draw water',  'ὑδρεύσατο': 'drew water',     'ἅβραι': 'maidservants',
+  'Ιεξαν': 'Jokshan',          'Δαιδαν': 'Dedan',               'δίδυμα': 'twins',
+  // ── Genesis 25–27 — Jacob / Esau narratives ──────────────────────────────
+  'δασύς': 'hairy',             'ἕψεμα': 'stew',                'ἐφαύλισεν': 'despised',
+  'ἐνέφραξαν': 'blocked',       'ἀπόδραθι': 'flee',
+  // ── Genesis 29–31 — Jacob's wives / Laban ────────────────────────────────
+  'Ζελφαν': 'Zilpah',           'Βαλλαν': 'Bilhah',             'ἀμνάδες': 'ewe-lambs',
+  'οἰκογενὴς': 'homeborn',      'ἀργυρώνητος': 'bought',        'Μελχας': 'Milcah',
+  // ── Gentilics (additional case forms) ────────────────────────────────────
+  'Χετταίους': 'Hittites',      'Ευαίους': 'Hivites',           'Ευαίου': 'Hivite',
+  'Χετταῖος': 'Hittite',        'Μωαβιτῶν': 'Moabites',         'Γεραροις': 'Gerar',
+  'ἄγροικος': 'farmer',
 };
 
+// Latin word-form overrides for Vulgate (medieval spellings: æ/œ ligatures,
+// inflected forms whose L&S lemma lookup returned no gloss).
+const LATIN_FORMS: Record<string, string> = {
+  // ── Pronouns / particles ──────────────────────────────────────────────────
+  'cujus': 'whose',          'cujusquam': 'anyone',     'uniuscujusque': 'each one',
+  'ne': 'whether',           'illæ': 'they',            'tantæ': 'so great',
+
+  // ── Praecipere (command) / praecedere (precede) ───────────────────────────
+  'præcipio': 'command',     'præcipiat': 'command',    'præcepero': 'command',
+  'præcipiente': 'command',  'præceperit': 'command',   'præceptorum': 'commands',
+  'præcedite': 'go before',  'præcessit': 'go before',  'præcede': 'go before',
+  'præcedens': 'precede',
+
+  // ── Praedicere / praedicare ───────────────────────────────────────────────
+  'prædico': 'proclaim',     'prædixerit': 'foretell',  'prædicta': 'foretold',
+
+  // ── Praedari (plunder) ────────────────────────────────────────────────────
+  'præda': 'plunder',        'prædæ': 'plunder',        'prædantium': 'plunderers',
+
+  // ── Praeparare (prepare) ──────────────────────────────────────────────────
+  'præparatum': 'prepared',  'præparabit': 'prepare',
+
+  // ── Praesidium (garrison) ─────────────────────────────────────────────────
+  'præsidium': 'garrison',   'præsidio': 'garrison',    'præsidia': 'garrisons',
+
+  // ── Praesto / praebere (provide/ready) ────────────────────────────────────
+  'præstoque': 'ready',      'præstiterunt': 'provide', 'præbuerit': 'provide',
+
+  // ── Praeterire (pass by) ─────────────────────────────────────────────────
+  'præterieritis': 'pass by','præterire': 'pass by',    'præteribis': 'pass by',
+  'præterivi': 'pass by',
+
+  // ── Praefectus / praeferre ────────────────────────────────────────────────
+  'præfectique': 'officers', 'præferre': 'prefer',
+
+  // ── Praevaricari / praesens / praeclarus / praecipuus ─────────────────────
+  'prævaricari': 'transgress','præsenti': 'present',
+  'præclara': 'splendid',    'præcipuum': 'chief',
+
+  // ── Proelium (battle) ─────────────────────────────────────────────────────
+  'prælium': 'battle',       'prælio': 'battle',
+
+  // ── Quaerere (seek) ──────────────────────────────────────────────────────
+  'quæsieris': 'seek',       'quærat': 'seek',          'quæsieritque': 'seek',
+  'quæresque': 'seek',       'quæremus': 'seek',        'quære': 'seek',
+  'quæstio': 'inquiry',
+
+  // ── Aedificare (build) ───────────────────────────────────────────────────
+  'Ædifica': 'build',        'Ædificate': 'build',      'ædificaveris': 'build',
+  'ædificaverunt': 'build',  'ædificabis': 'build',     'ædificatur': 'build',
+  'ædificabitur': 'build',   'ædificat': 'build',       'ædificasti': 'build',
+  'ædifices': 'build',       'ædificetur': 'build',
+
+  // ── Caelum (heavens) ─────────────────────────────────────────────────────
+  'cælorum': 'heavens',      'cælique': 'heavens',
+
+  // ── Haereditas (inheritance) ─────────────────────────────────────────────
+  'hæreditas': 'inheritance','hæreditatem': 'inheritance',
+  'hæreditatis': 'inheritance','hæreditate': 'inheritance',
+  'hæreditarium': 'inheritance',
+
+  // ── Caerimonia (rite/ceremony) ────────────────────────────────────────────
+  'cæremonias': 'rite',      'cæremoniæ': 'rite',
+
+  // ── Vinea (vineyard) ─────────────────────────────────────────────────────
+  'vineas': 'vineyard',      'vinearum': 'vineyard',
+
+  // ── Hircus + -que enclitic (male goat; and) ──────────────────────────────
+  'hircumque': 'male goat',
+
+  // ── Occidere / interficere (kill/slay) ───────────────────────────────────
+  'occisi': 'slain',         'occisorum': 'slain',      'occideris': 'kill',
+  'occidatur': 'kill',       'interfecerunt': 'kill',   'interfecto': 'slain',
+  'interfectis': 'slain',    'interfecta': 'slain',     'interfectum': 'slain',
+  'interficias': 'kill',     'interfecistis': 'kill',   'interficere': 'kill',
+
+  // ── Caedere (cut/strike/hew) ─────────────────────────────────────────────
+  'cædebat': 'strike',       'cædent': 'cut',           'cædis': 'slaughter',
+  'cædenda': 'cut',          'cæsoribus': 'hewers',     'scidit': 'tear',
+  'sciderunt': 'tear',
+
+  // ── Contradicere (contradict) ────────────────────────────────────────────
+  'contradixerit': 'contradict','contradixit': 'contradict',
+
+  // ── Botrus (cluster of grapes) ───────────────────────────────────────────
+  'botri': 'cluster',        'botrum': 'cluster',
+
+  // ── Justus (just/righteous) ──────────────────────────────────────────────
+  'justum': 'just',          'justorum': 'just',        'justo': 'just',
+  'justaque': 'just',        'judicate': 'judge',
+
+  // ── Torrens (torrent/stream) ─────────────────────────────────────────────
+  'torrentis': 'torrent',    'torrentium': 'torrents',  'torrentibus': 'torrents',
+  'torrenti': 'torrent',
+
+  // ── Rebellis (rebel) ─────────────────────────────────────────────────────
+  'rebelles': 'rebels',      'rebellis': 'rebel',       'rebellium': 'rebels',
+
+  // ── Terminus (boundary) ──────────────────────────────────────────────────
+  'terminus': 'boundary',
+
+  // ── Perversus / contrarius ────────────────────────────────────────────────
+  'perversa': 'perverse',    'contraria': 'contrary',
+
+  // ── Gigas (giant) ────────────────────────────────────────────────────────
+  'gigantum': 'giants',
+
+  // ── Mutuum (loan) ────────────────────────────────────────────────────────
+  'mutuum': 'loan',
+
+  // ── Odiosus (hated) ──────────────────────────────────────────────────────
+  'odiosæ': 'hated',
+
+  // ── Fenerare / foenum / foedus / poenitudo ───────────────────────────────
+  'fœnerabis': 'lend',       'fœnerabit': 'lend',       'fœnus': 'interest',
+  'fœnumque': 'grass',       'fœditatis': 'shame',      'fœde': 'shamefully',
+  'pœnitudine': 'repentance',
+
+  // ── Communis / extremus / infinitus / immensus ────────────────────────────
+  'commune': 'common',
+  'extremam': 'uttermost',   'extremo': 'uttermost',
+  'infinita': 'countless',   'infinitæ': 'countless',   'immensa': 'immense',
+
+  // ── Misericordia (mercy) ─────────────────────────────────────────────────
+  'misericordiæ': 'mercy',
+
+  // ── Murmurare (grumble) ──────────────────────────────────────────────────
+  'murmurastis': 'murmur',   'murmurare': 'murmur',     'murmurat': 'murmur',
+  'murmurant': 'murmur',     'murmuretis': 'murmur',
+
+  // ── Pessimus ─────────────────────────────────────────────────────────────
+  'pessimæ': 'worst',
+
+  // ── Deglutire (swallow) ──────────────────────────────────────────────────
+  'deglutiat': 'swallow',
+
+  // ── Virga (rod/branch) ───────────────────────────────────────────────────
+  'virgæ': 'rod',
+
+  // ── Vacca (heifer) ───────────────────────────────────────────────────────
+  'vaccæ': 'heifer',
+
+  // ── Puteus (well) / publicus / votum / stabulum ───────────────────────────
+  'puteis': 'wells',         'publica': 'public',
+  'voti': 'vow',             'stabula': 'enclosures',
+
+  // ── Munire (fortify) ─────────────────────────────────────────────────────
+  'munitas': 'fortified',    'munitæ': 'fortified',
+
+  // ── Confinium (border) ───────────────────────────────────────────────────
+  'confinia': 'borders',     'confinium': 'border',
+
+  // ── Suburbanus (pastureland of Levitical cities) ──────────────────────────
+  'suburbanis': 'pasturelands',
+
+  // ── Propinquus / femina / redemit ────────────────────────────────────────
+  'propinquum': 'nearest kin','feminæ': 'woman',         'redemit': 'redeem',
+
+  // ── Conflatile (molten image) / ruminant / sicera ────────────────────────
+  'conflatile': 'molten image','ruminant': 'chew cud',   'siceram': 'strong drink',
+
+  // ── Laetitia / laetari (joy/rejoice) ─────────────────────────────────────
+  'lætitia': 'joy',          'lætaberis': 'rejoice',    'lætetur': 'rejoice',
+  'lætatus': 'rejoice',
+
+  // ── Sacerdos / calx / laevigare / aversus ────────────────────────────────
+  'sacerdotibus': 'priests', 'calce': 'lime',
+  'lævigabis': 'smooth',     'aversum': 'turned away',
+
+  // ── Antiquus ─────────────────────────────────────────────────────────────
+  'antiquorum': 'ancients',  'antiquis': 'ancients',
+
+  // ── Hujusmodi / supradictus / maledic ────────────────────────────────────
+  'hujuscemodi': 'of this kind','istiusmodi': 'of this kind',
+  'supradictarum': 'aforementioned','supradictis': 'aforementioned',
+  'maledic': 'curse',
+
+  // ── Novissimus (last/final) ──────────────────────────────────────────────
+  'novissima': 'last',       'novissimo': 'last',       'novissimum': 'last',
+
+  // ── Phiala / plena / lucerna / tuba / clangere ───────────────────────────
+  'phialæ': 'bowls',         'plena': 'full',
+  'lucernæ': 'lamps',        'tubæ': 'trumpet',
+  'clangueris': 'sound',     'sonitu': 'sound',
+
+  // ── Vigesimus / benefacere / absorptus ───────────────────────────────────
+  'vigesima': 'twentieth',   'benefaciamus': 'do good', 'absorptus': 'consumed',
+
+  // ── Food and drink ───────────────────────────────────────────────────────
+  'pepones': 'melons',       'cæpe': 'onion',           'tortulas': 'wafers',
+  'comedamus': 'eat',        'comeditur': 'eat',         'comederet': 'eat',
+  'comedebant': 'eat',       'comedens': 'eat',          'comedesque': 'eat',
+
+  // ── Nares / repellere ────────────────────────────────────────────────────
+  'nares': 'nostrils',       'repuleritis': 'reject',
+
+  // ── Prophetare / propheta ─────────────────────────────────────────────────
+  'prophetaverunt': 'prophesy','prophetarent': 'prophesy','prophetant': 'prophesy',
+  'prophetet': 'prophesy',   'prophetes': 'prophet',    'prophetæ': 'prophet',
+
+  // ── Arreptans / coros / Aethiopissa ──────────────────────────────────────
+  'arreptans': 'seizing',    'coros': 'cors',            'Æthiopissam': 'Ethiopian woman',
+
+  // ── Sum (to be) garbled forms ─────────────────────────────────────────────
+  'fuissent': 'be',          'sintque': 'be',            'eramus': 'be',
+  'eratis': 'be',            'sitæ': 'situated',
+
+  // ── Aenigmata / praecoquae ────────────────────────────────────────────────
+  'ænigmata': 'riddles',     'præcoquæ': 'early figs',
+
+  // ── Intrare (enter) ──────────────────────────────────────────────────────
+  'intrantibus': 'entering', 'intrantes': 'entering',   'introëunte': 'entering',
+  'introëas': 'enter',
+
+  // ── Granatum / circuita / revera ─────────────────────────────────────────
+  'granatis': 'pomegranate', 'circuita': 'surrounding', 'revera': 'truly',
+
+  // ── Recludo / proceres / crastinus ───────────────────────────────────────
+  'recluserunt': 'detain',   'proceres': 'leaders',     'crastino': 'tomorrow',
+
+  // ── Desaevire / impius / consuescere / monimentum ────────────────────────
+  'desæviet': 'rage',        'desævit': 'rage',
+  'impiorum': 'impious',     'impia': 'impious',
+  'consueta': 'accustomed',  'consuevisti': 'accustom', 'monimento': 'memorial',
+
+  // ── Aeneus / turgentibus / querela ───────────────────────────────────────
+  'ænea': 'bronze',          'turgentibus': 'budding',  'querelæ': 'complaint',
+
+  // ── Electus / egregius / pinguis / integer ───────────────────────────────
+  'electa': 'chosen',        'egregia': 'excellent',    'egregium': 'excellent',
+  'pinguia': 'fat',          'integræ': 'whole',
+
+  // ── Flamma / ecclesia / vivus / largus ───────────────────────────────────
+  'flammæ': 'flame',         'ecclesiæ': 'congregation',
+  'vivæ': 'living',          'largissimæ': 'abundant',  'largiter': 'abundantly',
+
+  // ── Taedere / regia / possessa / ditio ───────────────────────────────────
+  'tædere': 'weary',         'regia': 'royal',
+  'possessa': 'possessed',   'ditionis': 'dominion',
+
+  // ── Commorari (dwell/stay) ────────────────────────────────────────────────
+  'commorantur': 'dwell',    'commorantem': 'dwell',    'commorante': 'dwell',
+  'commoratur': 'dwell',
+
+  // ── Angustia (distress/narrow) ───────────────────────────────────────────
+  'angustiis': 'distress',   'angustum': 'narrow',      'angustia': 'distress',
+
+  // ── Resistere / nemorosus / ossa / nuntius / proximus ────────────────────
+  'resistenti': 'resist',    'nemorosæ': 'wooded',
+  'ossaque': 'bones',        'nuntiis': 'messengers',   'nuntii': 'messengers',
+  'proximos': 'neighbor',    'proximus': 'neighbor',
+
+  // ── Genitalis / matutinus / ceteri ───────────────────────────────────────
+  'genitalibus': 'genitals', 'matutinum': 'morning',
+  'ceterarum': 'others',     'ceteros': 'others',
+
+  // ── Rescire / parens / milleni ───────────────────────────────────────────
+  'rescivit': 'learn',       'parentis': 'parent',      'millenos': 'thousands',
+
+  // ── Numbers ──────────────────────────────────────────────────────────────
+  'trecenta': 'three hundred','quingentæ': 'five hundred','sexcentæ': 'six hundred',
+
+  // ── Murænula / famula / fabricari ────────────────────────────────────────
+  'murænulas': 'necklaces',  'famulis': 'servants',     'fabricabimus': 'build',
+
+  // ── Pauci / meridianus / auxilium / fortuitu ─────────────────────────────
+  'paucis': 'few',           'meridiana': 'southern',
+  'auxilia': 'help',         'fortuitu': 'by chance',
+
+  // ── Jubilaeus / maritus / stella ─────────────────────────────────────────
+  'jubilæus': 'jubilee',     'maritos': 'husbands',     'stellæ': 'stars',
+
+  // ── Apis / parturiens / obfirmare / universus ────────────────────────────
+  'apes': 'bees',            'parturientium': 'in labor',
+  'obfirmaverat': 'harden',  'universisque': 'all',
+
+  // ── Coepisse / adhaerere ─────────────────────────────────────────────────
+  'cœpisti': 'begin',
+  'adhæretis': 'cleave',     'adhærebis': 'cleave',     'adhærentes': 'cleave',
+  'adhærebitis': 'cleave',   'adhærebunt': 'cleave',    'adhæreas': 'cleave',
+
+  // ── Inclytus / volantes / sequester / tenebrae ───────────────────────────
+  'inclyta': 'renowned',     'volantium': 'birds',
+  'sequester': 'mediator',   'tenebrarum': 'darkness',
+
+  // ── Irascor / sculptilis / odire / reminisci ─────────────────────────────
+  'irasceturque': 'anger',   'irascetur': 'anger',
+  'sculptilia': 'carved idols','odientibus': 'hating',  'reminiscaris': 'remember',
+
+  // ── Nullus / inoboedire / aequitas / durus / comminatus ──────────────────
+  'nullæ': 'none',           'inobedientes': 'disobedient',
+  'æquitatem': 'justice',    'durissimæ': 'very stubborn','comminatus': 'threaten',
+
+  // ── Irriguus / montuosus / subversus ─────────────────────────────────────
+  'irriguæ': 'well-watered', 'montuosa': 'mountainous', 'subversæ': 'overthrown',
+
+  // ── Deuteronomy 14 animals ───────────────────────────────────────────────
+  'orygem': 'oryx',          'camelopardalum': 'giraffe','chœrogryllum': 'rock badger',
+  'ixion': 'kite',           'herodium': 'stork',
+  'hædum': 'kid goat',       'hædos': 'goats',
+
+  // ── Subrepo / egenus / viaticum / festum ─────────────────────────────────
+  'subrepat': 'creep up',    'egeno': 'poor',
+  'viaticum': 'provisions',  'festum': 'feast',
+
+  // ── Sapiens / inquisiere / ambiguus / python / alienus ───────────────────
+  'sapientum': 'wise',       'sapientiæ': 'wisdom',
+  'inquisieris': 'inquire',  'ambiguum': 'doubtful',
+  'pythones': 'diviners',    'alienis': 'foreign',      'alienorum': 'foreign',
+
+  // ── Vicinus / homicida / singulus / vitula ────────────────────────────────
+  'vicino': 'neighbor',      'homicidæ': 'murderer',
+  'singularum': 'individual','vitulæ': 'heifer',
+
+  // ── Caesaries / dilectus / coercitus / comessatio / luxuria ──────────────
+  'cæsariem': 'hair',        'dilectam': 'beloved',     'dilectæ': 'beloved',
+  'coërcitus': 'restrained', 'comessationibus': 'feasting','luxuriæ': 'excess',
+
+  // ── Incubare / praeceps / mamzer / requirere / polliceri ─────────────────
+  'incubantem': 'nesting',   'præceps': 'headlong',
+  'mamzer': 'illegitimate',  'requisita': 'required',   'polliceri': 'vow',
+
+  // ── Opponere / volens / persequi / plane ─────────────────────────────────
+  'opposuit': 'set against', 'volensque': 'willing',
+  'persecuti': 'pursue',     'plane': 'plainly',
+
+  // ── Caula / benedictus / aquila ──────────────────────────────────────────
+  'caulæ': 'sheepfold',      'benedictæ': 'blessed',    'aquilæ': 'eagle',
+
+  // ── Mollitia / secundae / gloriosus / scriptus / memoriter ───────────────
+  'mollitiem': 'tenderness', 'secundarum': 'afterbirth',
+  'gloriosum': 'glorious',   'scriptæ': 'written',      'memoriter': 'by heart',
+
+  // ── Stilla / vastus / salutare / daemonium / infernus ────────────────────
+  'stillæ': 'drops',         'vastæ': 'waste',
+  'salutari': 'salvation',   'dæmoniis': 'demons',      'inferni': 'underworld',
+
+  // ── Fel / opitulari / abyssus / luna / abscondere ────────────────────────
+  'fel': 'gall',             'fellis': 'gall',
+  'opitulentur': 'help',     'abysso': 'deep',           'lunæ': 'moon',
+  'absconditos': 'hidden',
+
+  // ── Dispergere / cogitare ─────────────────────────────────────────────────
+  'disperserit': 'scatter',  'cogitato': 'consider',
+};
+
+// In connected Greek speech, final acute accent shifts to grave; converting
+// back lets GREEK_FORMS keys (citation form, acute) match in-text forms.
+function normalizeGreekAccents(s: string): string {
+  return s.normalize('NFD').replace(/̀/g, '́').normalize('NFC');
+}
+
 export function normalizeGloss(gloss: string, orig?: string, lemma?: string): string {
-  if (!gloss || gloss === '[no gloss]') return gloss;
+  if (!gloss || gloss === '[no gloss]') {
+    if (orig) {
+      const o = orig.trim();
+      if (GREEK_FORMS[o]) return GREEK_FORMS[o];
+      const oNorm = normalizeGreekAccents(o);
+      if (oNorm !== o && GREEK_FORMS[oNorm]) return GREEK_FORMS[oNorm];
+      if (LATIN_FORMS[o]) return LATIN_FORMS[o];
+    }
+    return gloss;
+  }
 
   // 1. Lemma override — most authoritative
   if (lemma && LEMMA_OVERRIDES[lemma]) {
@@ -469,6 +935,10 @@ export function normalizeGloss(gloss: string, orig?: string, lemma?: string): st
     if (PARTICLES[bare]) return PARTICLES[bare];
     // Greek form map (for LXX entries without Strong's numbers)
     if (GREEK_FORMS[o]) return GREEK_FORMS[o];
+    const oNorm = normalizeGreekAccents(o);
+    if (oNorm !== o && GREEK_FORMS[oNorm]) return GREEK_FORMS[oNorm];
+    // Latin form map (for Vulgate entries with missing/garbled L&S glosses)
+    if (LATIN_FORMS[o]) return LATIN_FORMS[o];
   }
 
   let g = gloss.trim();

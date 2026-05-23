@@ -37,3 +37,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large build-time lexicon (not needed at runtime)
+scripts/DictBDB.json
+
+.vercel

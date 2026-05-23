@@ -19,8 +19,9 @@ export interface Correction {
   reason: string;
 }
 
-interface VerificationResult {
+export interface VerificationResult {
   verified: boolean;
+  skipped?: boolean;
   corrections: Correction[];
   corrected_rows?: unknown[];
 }
@@ -241,8 +242,7 @@ export async function verifyAlignment(ref: string, rows: unknown[]): Promise<Ver
 
     return extractJSON(text) as VerificationResult;
   } catch (err) {
-    // Verification is best-effort — never block the result
     console.warn('Verification failed (non-fatal):', err);
-    return { verified: true, corrections: [] };
+    return { verified: false, skipped: true, corrections: [] };
   }
 }

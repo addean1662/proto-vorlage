@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
 import { getCachedVerse, cacheVerse, incrementCachedCount } from '@/lib/cache';
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
-import { alignWithClaudeStream, type StreamMeta, type Correction } from '@/lib/claude';
+import { alignWithClaudeStream, verifyAlignment, type StreamMeta, type Correction } from '@/lib/claude';
 import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, type OSHBWord, type LXXWord, type VulgateWord, type DSSWord } from '@/lib/lexicon';
 import { normalizeGloss } from '@/lib/normalize-gloss';
 import { matchDSSWord } from '@/lib/dss-gloss';
@@ -40,7 +40,7 @@ type DisplayDSSEntry = {
   eng: string;
   def?: string;
   frag: string | null;
-  status: 'extant' | 'partial' | 'lost';
+  status: 'extant' | 'attested' | 'partial' | 'lost';
   paleo: boolean;
 };
 
@@ -106,7 +106,7 @@ function assembleDisplayRow(
   if ('vul_idx' in raw) {
     const idx = raw.vul_idx;
     vul = (idx !== null && idx !== undefined && vulWords && vulWords[idx])
-      ? { orig: vulWords[idx].orig, eng: normalizeGloss(vulWords[idx].eng, vulWords[idx].orig, vulWords[idx].lemma ?? undefined), xlit: vulWords[idx].xlit, def: vulWords[idx].def, lemma: vulWords[idx].lemma ?? undefined }
+      ? { orig: vulWords[idx].orig, eng: normalizeGloss(vulWords[idx].eng, vulWords[idx].orig, vulWords[idx].lemma ?? undefined), xlit: vulWords[idx].xlit, def: vulWords[idx].def ?? vulWords[idx].eng, lemma: vulWords[idx].lemma ?? undefined }
       : DASH;
   } else {
     vul = raw.vul ?? DASH;
@@ -274,15 +274,19 @@ export async function POST(request: NextRequest): Promise<Response> {
         emit('row', { row: assembledRows[i] });
       }
 
-      // 4b. Apply pre-built DSS data if available (keyed by mt_idx → position in MT word list)
+      // 4b. Apply pre-built DSS data if available (keyed by mt_idx → position in MT word list).
+      // Plus rows (mt_idx: null) get the verse-level status — the scroll covers this verse region
+      // and may attest the plus word; that evidence must not be suppressed.
       const prebuiltDSS = getDSSWords(canonical);
       let finalRows: DisplayRow[];
       if (prebuiltDSS) {
+        const verseLevelDSS = prebuiltDSS[0]; // all words in a verse share the same status/frag
         finalRows = assembledRows.map((row, i) => {
-          // Use mt_idx from the raw row to look up DSS data by MT word position
           const rawRow = rawRows[i];
           const mtIdx = 'mt_idx' in rawRow ? rawRow.mt_idx : null;
-          const prebuilt = (mtIdx !== null && mtIdx !== undefined) ? prebuiltDSS[mtIdx] : undefined;
+          const prebuilt = (mtIdx !== null && mtIdx !== undefined)
+            ? prebuiltDSS[mtIdx]
+            : verseLevelDSS; // plus rows inherit verse-level DSS status
           if (!prebuilt) return row;
           return {
             ...row,
@@ -313,16 +317,16 @@ export async function POST(request: NextRequest): Promise<Response> {
         return row;
       });
 
-      // 6. Verification pass removed — MT/LXX/Vulgate glosses are authoritative from lexicons,
-      //    and DSS glosses are resolved from the OSHB unpointed index. No second Claude call needed.
-      const corrections: Correction[] = [];
+      // 6. Second-pass verification — catches semantic misalignments
+      const verification = await verifyAlignment(ref, finalRows);
+      const corrections = verification.skipped ? [] : verification.corrections;
 
       // 7. Cache and signal done
       const finalData = { ...alignedData, rows: finalRows };
       await cacheVerse(key, finalData);
       await incrementCachedCount();
 
-      emit('done', { data: finalData, fromCache: false, corrections });
+      emit('done', { data: finalData, fromCache: false, corrections, verificationSkipped: verification.skipped ?? false });
       close();
     } catch (err) {
       emit('error', { message: (err as Error).message ?? 'Unknown error' });

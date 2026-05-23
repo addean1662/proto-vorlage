@@ -2,7 +2,8 @@
  * build-dss.mjs
  * Pre-builds DSS data for all Torah books using coverage JSON files.
  *
- * For verses with manuscripts: strip nikud from MT words to get unpointed DSS text.
+ * For verses with manuscripts: record which scrolls attest the verse.
+ *   orig/eng are left empty — only actual DSS transcription data belongs here.
  * For verses with no manuscripts: mark all words as "lost".
  *
  * Output: data/dss/{Gen,Exod,Lev,Num,Deut}.json
@@ -26,9 +27,8 @@ const BOOKS = [
   { abbr: 'Deut', name: 'deuteronomy' },
 ];
 
-function stripNikud(s) {
-  return s.replace(/[\u0591-\u05C7]/g, '');
-}
+// Paleo-Hebrew script manuscripts \u2014 script identification matters for scholarly display
+const PALEO_MANUSCRIPTS = new Set(['4Q22', '4Q45', '4Q46', '11Q1']);
 
 function buildBook({ abbr, name }) {
   const mtData = JSON.parse(fs.readFileSync(path.join(ROOT, `data/oshb/${abbr}.json`), 'utf8'));
@@ -55,14 +55,20 @@ function buildBook({ abbr, name }) {
         orig: '—', eng: '—', manuscripts: [], status: 'lost',
       }));
     } else {
-      const primaryMs = manuscripts[0];
-      dssData[key] = mtWords.map(w => ({
-        orig: stripNikud(w.orig),
-        eng: w.eng,
+      // If a paleo manuscript is among the witnesses, surface it as the primary siglum —
+      // script identification is a primary datum and should not be buried behind a non-paleo siglum.
+      const paleoMs = manuscripts.find(ms => PALEO_MANUSCRIPTS.has(ms));
+      const primaryMs = paleoMs ?? manuscripts[0];
+      const isPaleo = !!paleoMs;
+      // 'attested': verse is preserved in this scroll; word-level readability not yet verified.
+      // 'extant' is reserved for confirmed word-level readings from actual transcription data.
+      dssData[key] = mtWords.map(() => ({
+        orig: '',
+        eng: '',
         manuscripts,
         frag: primaryMs,
-        status: 'extant',
-        paleo: false,
+        status: 'attested',
+        paleo: isPaleo,
       }));
     }
   }
