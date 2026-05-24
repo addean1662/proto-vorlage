@@ -114,15 +114,21 @@ function assembleDisplayRow(
 
   // DSS
   const rawDSS = raw.dss;
-  const dss: DisplayDSSEntry = rawDSS
-    ? {
-        orig: rawDSS.orig ?? '—',
-        eng: rawDSS.eng ?? '—',
-        frag: rawDSS.frag ?? null,
-        status: rawDSS.status ?? 'lost',
-        paleo: rawDSS.paleo ?? false,
-      }
-    : LOST_DSS;
+  let dss: DisplayDSSEntry;
+  if (rawDSS) {
+    dss = {
+      orig: rawDSS.orig ?? '—',
+      eng: rawDSS.eng ?? '—',
+      frag: rawDSS.frag ?? null,
+      status: rawDSS.status ?? 'lost',
+      paleo: rawDSS.paleo ?? false,
+    };
+  } else if (mt.orig === '—') {
+    // MT is a padding/alignment dash — no word to be "lost", so DSS is also a dash.
+    dss = { orig: '—', eng: '—', frag: null, status: 'extant', paleo: false };
+  } else {
+    dss = LOST_DSS;
+  }
 
   return { mt, lxx, vul, dss };
 }
@@ -287,7 +293,15 @@ export async function POST(request: NextRequest): Promise<Response> {
           const prebuilt = (mtIdx !== null && mtIdx !== undefined)
             ? prebuiltDSS[mtIdx]
             : verseLevelDSS; // plus rows inherit verse-level DSS status
-          if (!prebuilt) return row;
+          if (!prebuilt) {
+            // Pre-built DSS exists for this verse but no entry for this mt_idx.
+            // This is an alignment gap — DSS simply has fewer words than MT here.
+            // Show a dash, not a red dot (the word is not "lost", just unaligned).
+            return {
+              ...row,
+              dss: { orig: '—', eng: '—', frag: verseLevelDSS?.frag ?? null, status: 'extant' as const, paleo: false },
+            };
+          }
           return {
             ...row,
             dss: {
@@ -302,6 +316,15 @@ export async function POST(request: NextRequest): Promise<Response> {
       } else {
         finalRows = assembledRows;
       }
+
+      // 4c. When MT is a dash (alignment padding row), DSS should also be a dash.
+      // A red dot on a row with no MT word is meaningless — there is nothing to be "lost".
+      finalRows = finalRows.map((row) => {
+        if (row.mt.orig === '—' && row.dss.status === 'lost') {
+          return { ...row, dss: { ...row.dss, orig: '—', eng: '—', status: 'extant' as const } };
+        }
+        return row;
+      });
 
       // 5. Normalize DSS glosses (match against OSHB index, fallback to normalizeGloss)
       finalRows = finalRows.map((row) => {
