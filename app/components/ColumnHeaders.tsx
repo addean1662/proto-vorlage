@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 const COLUMNS = [
   { key: 'dss', label: 'Dead Sea Scrolls', script: 'Hebrew', date: 'c. 250 BCE–68 CE', color: '#c4a882' },
   { key: 'lxx', label: 'Septuagint',       script: 'Greek',  date: 'c. 280–150 BCE', color: '#7ea8be' },
@@ -46,6 +48,13 @@ export default function ColumnHeaders() {
               <div style={{ fontSize: 10, color: 'rgba(200,180,150,.45)', fontStyle: 'italic' }}>
                   {col.date}
                 </div>
+              {col.key === 'dss' && (
+                <Link href="/dss-fragments" style={{ fontSize: 9, color: 'rgba(200,180,150,.35)', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(200,180,150,.7)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(200,180,150,.35)')}>
+                  See all witnesses →
+                </Link>
+              )}
               </div>
               {/* Right half empty — mirrors gloss area */}
               <div style={{ flex: '1 1 50%' }} />

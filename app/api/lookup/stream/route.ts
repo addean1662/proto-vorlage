@@ -3,9 +3,9 @@ import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
 import { getCachedVerse, cacheVerse, incrementCachedCount } from '@/lib/cache';
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
 import { alignWithClaudeStream, verifyAlignment, type StreamMeta, type Correction } from '@/lib/claude';
-import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, type OSHBWord, type LXXWord, type VulgateWord, type DSSWord } from '@/lib/lexicon';
+import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, getDSSVariants, type OSHBWord, type LXXWord, type VulgateWord, type DSSWord } from '@/lib/lexicon';
 import { normalizeGloss } from '@/lib/normalize-gloss';
-import { matchDSSWord } from '@/lib/dss-gloss';
+import { matchDSSWord, stripNikud } from '@/lib/dss-gloss';
 
 // Allow up to 5 minutes for long-running Claude + verification calls
 export const maxDuration = 300;
@@ -185,7 +185,15 @@ export async function POST(request: NextRequest): Promise<Response> {
       // 1. Cache hit → instant response
       const cached = await getCachedVerse(key);
       if (cached) {
-        emit('cached', { data: cached, fromCache: true });
+        // Apply the MT-dash fix to cached entries that predate the fix
+        const cachedData = cached as { ref: string; title: string; subtitle: string; rows: DisplayRow[] };
+        const fixedRows = cachedData.rows.map((row: DisplayRow) => {
+          if (row.mt.orig === '—' && row.dss.status === 'lost') {
+            return { ...row, dss: { ...row.dss, orig: '—', eng: '—', status: 'extant' as const } };
+          }
+          return row;
+        });
+        emit('cached', { data: { ...cachedData, rows: fixedRows }, fromCache: true });
         close();
         return;
       }
@@ -325,6 +333,29 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
         return row;
       });
+
+      // 4d. Apply verified DSS variants (audited against published scholarly sources).
+      //     Only entries in the variants file get DSS text — unaudited attested entries
+      //     intentionally show siglum only, so divergences are never silently hidden.
+      const dssVariants = getDSSVariants(canonical);
+      if (dssVariants) {
+        finalRows = finalRows.map((row, i) => {
+          const rawRow = rawRows[i];
+          const mtIdx = 'mt_idx' in rawRow ? rawRow.mt_idx : null;
+          if (mtIdx === null || mtIdx === undefined) return row;
+          const variant = dssVariants[mtIdx];
+          if (!variant) return row;
+          return {
+            ...row,
+            dss: {
+              ...row.dss,
+              orig: variant.orig,
+              eng: variant.eng,
+              status: 'extant' as const,
+            },
+          };
+        });
+      }
 
       // 5. Normalize DSS glosses (match against OSHB index, fallback to normalizeGloss)
       finalRows = finalRows.map((row) => {

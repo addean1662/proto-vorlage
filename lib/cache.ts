@@ -66,3 +66,27 @@ export async function incrementCachedCount(): Promise<void> {
   }
   // file-based count is derived from file count, nothing to increment
 }
+
+export async function clearAllCached(): Promise<number> {
+  if (!isRedisConfigured()) {
+    ensureCacheDir();
+    const files = fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.json'));
+    for (const f of files) fs.unlinkSync(path.join(CACHE_DIR, f));
+    return files.length;
+  }
+  const redis = getRedis();
+  // Scan all verse keys and delete them, then reset the count
+  let cursor = 0;
+  let deleted = 0;
+  do {
+    const result = await redis.scan(cursor, { match: 'verse:*', count: 100 });
+    cursor = result[0];
+    const keys = result[1] as string[];
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      deleted += keys.length;
+    }
+  } while (cursor !== 0);
+  await redis.set('__verse_count__', 0);
+  return deleted;
+}

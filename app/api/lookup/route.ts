@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
-import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clearCachedVerse } from '@/lib/cache';
+import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clearCachedVerse, clearAllCached } from '@/lib/cache';
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
 import { alignWithClaude } from '@/lib/claude';
 
@@ -25,7 +25,15 @@ export async function GET() {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { refs } = await request.json() as { refs: string[] };
+  let body: { refs?: string[]; all?: boolean };
+  try { body = await request.json(); } catch { body = {}; }
+
+  if (body.all) {
+    const count = await clearAllCached();
+    return Response.json({ cleared: count });
+  }
+
+  const refs = body.refs ?? [];
   const cleared: string[] = [];
   for (const ref of refs) {
     const key = normalizeRef(canonicalizeRef(ref.trim()));

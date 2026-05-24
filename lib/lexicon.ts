@@ -188,3 +188,36 @@ export function getDSSWords(ref: string): DSSWord[] | null {
     return null;
   }
 }
+
+// ── DSS Variants (audited against published scholarly sources) ────────────────
+
+export interface DSSVariant {
+  orig: string;   // actual DSS Hebrew (unpointed)
+  eng: string;    // English gloss
+  note?: string;  // source / scholarly note
+}
+
+// Keyed by chapter:verse → mt_idx → variant
+type VariantVerseMap = Record<string, Record<number, DSSVariant>>;
+
+const variantCache: Record<string, VariantVerseMap> = {};
+
+function loadVariantBook(book: string): VariantVerseMap | null {
+  if (variantCache[book]) return variantCache[book];
+  const basename = BOOK_BASENAME[book];
+  if (!basename) return null;
+  const filePath = path.join(process.cwd(), 'data', 'dss', 'variants', `${basename}.json`);
+  if (!fs.existsSync(filePath)) return null;
+  variantCache[book] = JSON.parse(fs.readFileSync(filePath, 'utf8')) as VariantVerseMap;
+  return variantCache[book];
+}
+
+/** Get verified DSS variants for a verse. Returns null if no variant file for this book. */
+export function getDSSVariants(ref: string): Record<number, DSSVariant> | null {
+  try {
+    const { book, key } = parseRef(ref);
+    return loadVariantBook(book)?.[key] ?? null;
+  } catch {
+    return null;
+  }
+}
