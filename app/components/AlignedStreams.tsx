@@ -313,8 +313,8 @@ export default function AlignedStreams({
               <div style={{ fontSize: 10, color: 'rgba(200,180,150,.4)', fontStyle: 'italic', marginTop: 2 }}>{col.date}</div>
             </div>
             {/* Right half — left-aligned, mirrors gloss column */}
-            <div style={{ flex: '1 1 50%', paddingLeft: 10 }}>
-              <div style={{ fontSize: 10, color: 'rgba(200,180,150,.35)', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 2 }}>{col.glossSource}</div>
+            <div style={{ flex: '1 1 50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <div style={{ fontSize: 10, color: 'rgba(200,180,150,.35)', letterSpacing: '.06em', textTransform: 'uppercase' }}>{col.glossSource}</div>
             </div>
           </div>
         ))}
