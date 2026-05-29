@@ -11,7 +11,7 @@ interface WordEntry {
 
 interface DSSEntry extends WordEntry {
   frag: string | null;
-  status: 'extant' | 'partial' | 'lost';
+  status: 'extant' | 'attested' | 'partial' | 'lost';
   paleo?: boolean;
 }
 

@@ -1,16 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import SearchBar from './components/SearchBar';
 import VerseTable from './components/VerseTable';
+import AlignedStreams from './components/AlignedStreams';
 import Legend from './components/Legend';
 import { getAdjacentRef } from '@/lib/torah';
 import type { Correction } from '@/lib/claude';
 
 interface WordEntry { orig: string; eng: string; xlit?: string; def?: string; lemma?: string; strongs?: string; }
-interface DSSEntry extends WordEntry { frag: string | null; status: 'extant' | 'partial' | 'lost'; paleo?: boolean; }
+interface DSSEntry extends WordEntry { frag: string | null; status: 'extant' | 'attested' | 'partial' | 'lost'; paleo?: boolean; }
 interface VerseRow { mt: WordEntry; lxx: WordEntry; vul: WordEntry; dss: DSSEntry; }
-interface VerseData { ref: string; title: string; subtitle: string; rows: VerseRow[]; }
+
+// Old (row-based) format — served from legacy cache entries
+interface OldVerseData { ref: string; title: string; subtitle: string; rows: VerseRow[]; }
+
+// New (source-order) format
+interface Traditions { dss: DSSEntry[]; lxx: WordEntry[]; mt: WordEntry[]; vul: WordEntry[]; }
+interface AlignmentGroup { lxx: number | null; mt: number | null; vul: number | null; }
+interface NewVerseData { ref: string; title: string; subtitle: string; traditions: Traditions; groups: AlignmentGroup[]; }
+
+type VerseData = OldVerseData | NewVerseData;
+function isNewFormat(d: VerseData): d is NewVerseData { return 'traditions' in d; }
 
 // ── SSE event parsing ─────────────────────────────────────────────────────────
 function parseSSEBuffer(buffer: string): { events: Array<{ event: string; data: unknown }>; remaining: string } {
@@ -55,6 +67,7 @@ export default function Home() {
   const [isComplete, setIsComplete] = useState(false);
   const [sourcePreview, setSourcePreview] = useState<Record<string, string>>({});
   const [corrections, setCorrections] = useState<Correction[]>([]);
+  const [alignmentLoading, setAlignmentLoading] = useState(false);
 
   const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -136,6 +149,7 @@ export default function Home() {
     setIsComplete(false);
     setSourcePreview({});
     setCorrections([]);
+    setAlignmentLoading(false);
     setPhase('Connecting…');
     setElapsed(0);
 
@@ -173,7 +187,7 @@ export default function Home() {
           const d = data as Record<string, unknown>;
 
           if (event === 'cached') {
-            setDisplayData((d.data as VerseData));
+            setDisplayData(d.data as VerseData);
             setFromCache(true);
             setIsComplete(true);
             addToHistory((d.data as VerseData).ref);
@@ -188,12 +202,29 @@ export default function Home() {
             setSourcePreview(prev => ({ ...prev, [d.source as string]: d.text as string }));
           }
 
-          if (event === 'meta') {
-            setDisplayData({ ref: d.ref as string, title: d.title as string, subtitle: d.subtitle as string, rows: [] });
+          // New: word lists arrive before alignment — show columns immediately
+          if (event === 'traditions') {
+            setDisplayData(prev => {
+              const base = { ref: trimmed, title: '', subtitle: '', groups: [] };
+              if (prev && isNewFormat(prev)) return { ...prev, traditions: d.traditions as Traditions };
+              return { ...base, traditions: d.traditions as Traditions };
+            });
+            setAlignmentLoading(true);
           }
 
+          if (event === 'meta') {
+            setDisplayData(prev => {
+              if (!prev) return { ref: d.ref as string, title: d.title as string, subtitle: d.subtitle as string, rows: [] };
+              return { ...prev, ref: d.ref as string, title: d.title as string, subtitle: d.subtitle as string };
+            });
+          }
+
+          // Old format: progressive row streaming (legacy cache entries)
           if (event === 'row') {
-            setDisplayData(prev => prev ? { ...prev, rows: [...prev.rows, d.row as VerseRow] } : null);
+            setDisplayData(prev => {
+              if (!prev || isNewFormat(prev)) return prev;
+              return { ...prev, rows: [...prev.rows, d.row as VerseRow] };
+            });
           }
 
           if (event === 'correction') {
@@ -203,6 +234,7 @@ export default function Home() {
           if (event === 'done') {
             const finalData = d.data as VerseData;
             setDisplayData(finalData);
+            setAlignmentLoading(false);
             setFromCache(false);
             setIsComplete(true);
             addToHistory(finalData.ref);
@@ -229,7 +261,7 @@ export default function Home() {
   }
 
   // Whether to show the source preview area
-  const showPreviews = loading && Object.keys(sourcePreview).length > 0 && (!displayData || displayData.rows.length === 0);
+  const showPreviews = loading && Object.keys(sourcePreview).length > 0 && (!displayData || (!isNewFormat(displayData) && (displayData as OldVerseData).rows.length === 0));
   // Fade previews once rows start arriving
   const previewsVisible = showPreviews;
 
@@ -249,6 +281,13 @@ export default function Home() {
             <p style={{ fontSize: 13, color: 'rgba(200,180,150,.6)', fontStyle: 'italic', margin: '2px 0 0' }}>
               Genesis · Exodus · Leviticus · Numbers · Deuteronomy
             </p>
+            <div style={{ marginTop: 10, display: 'flex', gap: 18 }}>
+              <Link href="/dss-fragments" style={{ fontSize: 11, color: 'rgba(200,180,150,.4)', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(200,180,150,.75)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(200,180,150,.4)')}>
+                Dead Sea Scroll Witnesses →
+              </Link>
+            </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 13, color: '#8ab86e', fontWeight: 600 }}>
@@ -375,7 +414,18 @@ export default function Home() {
           );
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <VerseTable data={displayData} fromCache={fromCache} streaming={!isComplete} />
+              {isNewFormat(displayData) ? (
+                <AlignedStreams
+                  ref={displayData.ref || lastRef}
+                  title={displayData.title}
+                  subtitle={displayData.subtitle}
+                  traditions={displayData.traditions}
+                  groups={displayData.groups}
+                  loadingAlignment={alignmentLoading}
+                />
+              ) : (
+                <VerseTable data={displayData as OldVerseData} fromCache={fromCache} streaming={!isComplete} />
+              )}
 
               {/* Corrections box */}
               {corrections.length > 0 && (
@@ -383,9 +433,9 @@ export default function Home() {
                   <div style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(200,180,150,.4)', marginBottom: 8 }}>Verification corrections</div>
                   {corrections.map((c, i) => (
                     <p key={i} style={{ margin: '0 0 4px', fontSize: 12, color: 'rgba(200,180,150,.55)', lineHeight: 1.6, fontFamily: "var(--font-garamond),'EB Garamond',serif" }}>
-                      <span style={{ textTransform: 'capitalize' }}>{c.column}</span> row {c.row + 1} —{' '}
-                      <span style={{ color: 'rgba(200,180,150,.35)', textDecoration: 'line-through' }}>{c.was}</span>{' '}
-                      → <span style={{ color: 'rgba(200,180,150,.75)' }}>{c.now}</span>
+                      <span style={{ textTransform: 'capitalize' }}>{c.tradition}</span> group {c.group + 1} —{' '}
+                      <span style={{ color: 'rgba(200,180,150,.35)', textDecoration: 'line-through' }}>{String(c.was)}</span>{' '}
+                      → <span style={{ color: 'rgba(200,180,150,.75)' }}>{String(c.now)}</span>
                       {c.reason ? <span style={{ color: 'rgba(200,180,150,.3)' }}> ({c.reason})</span> : null}
                     </p>
                   ))}
@@ -403,7 +453,7 @@ export default function Home() {
 
               {isComplete && (
                 <>
-                  <Legend rows={displayData.rows} />
+                  {!isNewFormat(displayData) && <Legend rows={(displayData as OldVerseData).rows} />}
                   <p style={{ margin: '14px 0 0', fontSize: 11, color: 'rgba(200,180,150,.4)', lineHeight: 1.5 }}>
                     {fromCache ? 'Served from community cache — no API cost.' : 'Fetched live and permanently cached.'}
                     {' '}Masoretic Text: Westminster Leningrad Codex (OSHB) · Septuagint: Rahlfs 1935 (STEPBible TBESG) ·

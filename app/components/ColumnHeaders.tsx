@@ -3,10 +3,10 @@
 import Link from 'next/link';
 
 const COLUMNS = [
-  { key: 'dss', label: 'Dead Sea Scrolls', script: 'Hebrew', date: 'c. 250 BCE–68 CE', color: '#c4a882' },
-  { key: 'lxx', label: 'Septuagint',       script: 'Greek',  date: 'c. 280–150 BCE', color: '#7ea8be' },
-  { key: 'vul', label: 'Vulgate',          script: 'Latin',  date: 'c. 382–405 CE', color: '#a8b896' },
-  { key: 'mt',  label: 'Masoretic Text',   script: 'Hebrew', date: 'c. 700–900 CE',  color: '#d4a574' },
+  { key: 'dss', label: 'Dead Sea Scrolls', date: 'c. 250 BCE–68 CE', color: '#c4a882', glossSource: 'Academic glosses' },
+  { key: 'lxx', label: 'Septuagint',       date: 'c. 280–150 BCE',   color: '#7ea8be', glossSource: 'TBESG' },
+  { key: 'vul', label: 'Vulgate',          date: 'c. 382–405 CE',    color: '#a8b896', glossSource: "Whitaker's Words" },
+  { key: 'mt',  label: 'Masoretic Text',   date: 'c. 700–900 CE',    color: '#d4a574', glossSource: 'BDB' },
 ];
 
 export default function ColumnHeaders() {
@@ -19,80 +19,56 @@ export default function ColumnHeaders() {
         overflow: 'hidden',
       }}
     >
-      {COLUMNS.map((col) => {
-        const isHebrew = col.script === 'Hebrew';
-
-        if (isHebrew) {
-          return (
-            <div
-              key={col.key}
-              style={{
-                padding: '12px 14px',
-                background: '#0f0d0a',
-                borderBottom: `2px solid ${col.color}40`,
-                display: 'flex',
-                alignItems: 'flex-start',
-              }}
-            >
-              {/* Left half — right-aligned to sit above the RTL original text */}
-              <div style={{
-                flex: '1 1 50%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-              }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: col.color }}>{col.label}</div>
-                <div style={{ fontSize: 11, color: 'rgba(200,180,150,.5)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                  {col.script}
-                </div>
-              <div style={{ fontSize: 10, color: 'rgba(200,180,150,.45)', fontStyle: 'italic' }}>
-                  {col.date}
-                </div>
-              {col.key === 'dss' && (
-                <Link href="/dss-fragments" style={{ fontSize: 9, color: 'rgba(200,180,150,.35)', letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(200,180,150,.7)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(200,180,150,.35)')}>
-                  See all witnesses →
-                </Link>
-              )}
-              </div>
-              {/* Right half empty — mirrors gloss area */}
-              <div style={{ flex: '1 1 50%' }} />
-            </div>
-          );
-        }
-
-        return (
-          <div
-            key={col.key}
-            style={{
-              padding: '12px 14px',
-              background: '#0f0d0a',
-              borderBottom: `2px solid ${col.color}40`,
-              display: 'flex',
-              alignItems: 'flex-start',
-            }}
-          >
-            {/* Left half — right-aligned to sit above the original text */}
-            <div style={{
-              flex: '1 1 50%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: col.color }}>{col.label}</div>
-              <div style={{ fontSize: 10, color: 'rgba(200,180,150,.5)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                {col.script}
-              </div>
-              <div style={{ fontSize: 9, color: 'rgba(200,180,150,.45)', fontStyle: 'italic' }}>
-                {col.date}
-              </div>
-            </div>
-            {/* Right half empty — mirrors gloss area */}
-            <div style={{ flex: '1 1 50%' }} />
+      {COLUMNS.map((col) => (
+        <div
+          key={col.key}
+          style={{
+            padding: '12px 14px',
+            background: '#0f0d0a',
+            borderBottom: `2px solid ${col.color}40`,
+            display: 'flex',
+            alignItems: 'flex-start',
+          }}
+        >
+          {/* Left half — right-aligned, above source text */}
+          <div style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingRight: 10 }}>
+            {col.key === 'dss' && (
+              <Link
+                href="/dss-fragments"
+                style={{
+                  marginBottom: 6,
+                  display: 'inline-block',
+                  fontSize: 9,
+                  letterSpacing: '.1em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  color: col.color,
+                  border: `1px solid ${col.color}80`,
+                  borderRadius: 3,
+                  padding: '3px 7px',
+                  transition: 'background .15s, border-color .15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = `${col.color}18`;
+                  e.currentTarget.style.borderColor = col.color;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = `${col.color}80`;
+                }}
+              >
+                See DSS Fragments →
+              </Link>
+            )}
+            <div style={{ fontSize: 14, fontWeight: 600, color: col.color, textAlign: 'right' }}>{col.label}</div>
+            <div style={{ fontSize: 10, color: 'rgba(200,180,150,.45)', fontStyle: 'italic', marginTop: 2 }}>{col.date}</div>
           </div>
-        );
-      })}
+          {/* Right half — left-aligned, above gloss */}
+          <div style={{ flex: '1 1 50%', paddingLeft: 10 }}>
+            <div style={{ fontSize: 10, color: 'rgba(200,180,150,.35)', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 2 }}>{col.glossSource}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

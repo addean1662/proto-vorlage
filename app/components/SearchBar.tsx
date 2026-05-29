@@ -3,15 +3,11 @@
 import { FormEvent } from 'react';
 
 const QUICK_ACCESS = [
-  'Genesis 1:1',
-  'Genesis 3:15',
-  'Genesis 22:8',
-  'Exodus 3:14',
-  'Exodus 20:2',
-  'Leviticus 17:11',
-  'Numbers 24:17',
-  'Deuteronomy 6:4',
-  'Deuteronomy 18:15',
+  { label: 'Genesis',     ref: 'Genesis 1:1' },
+  { label: 'Exodus',      ref: 'Exodus 1:1' },
+  { label: 'Leviticus',   ref: 'Leviticus 1:1' },
+  { label: 'Numbers',     ref: 'Numbers 1:1' },
+  { label: 'Deuteronomy', ref: 'Deuteronomy 1:1' },
 ];
 
 interface SearchBarProps {
@@ -84,7 +80,7 @@ export default function SearchBar({
 
       {/* Quick-access buttons */}
       <div className="flex flex-wrap gap-2">
-        {QUICK_ACCESS.map((ref) => (
+        {QUICK_ACCESS.map(({ label, ref }) => (
           <button
             key={ref}
             onClick={() => {
@@ -102,7 +98,7 @@ export default function SearchBar({
               cursor: blocked ? 'not-allowed' : 'pointer',
             }}
           >
-            {ref}
+            {label}
           </button>
         ))}
       </div>

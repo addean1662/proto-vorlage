@@ -37,30 +37,45 @@ const TORAH_BOOKS = [
 ];
 const TORAH_PREFIXES = new Set(TORAH_BOOKS.map(b => b.prefix));
 
-// ── 1. Parse TBESG: Strong's number → one-word English gloss ─────────────────
+// ── 1. Parse TBESG: Strong's → Greek lemma (col 3) + fallback gloss (col 6) ──
+// LSJ is the primary gloss source. TBESG gloss is fallback only when LSJ has
+// no entry for the lemma. TBESG col 3 gives us the lemma to look up in LSJ.
 console.log('Parsing TBESG lexicon…');
-const tbesgGloss = new Map(); // G1722 → "in/by"
+const tbesgLemma = new Map(); // G1722 → "ἐν"   (Greek lemma for LSJ lookup)
+const tbesgGloss = new Map(); // G1722 → "in/by" (fallback only)
 
 for (const line of fs.readFileSync(path.join(DATA, 'tbesg.txt'), 'utf8').split('\n')) {
-  // Data lines start with G followed by digits
   if (!/^G\d/.test(line)) continue;
   const cols = line.split('\t');
   if (cols.length < 7) continue;
-
-  // Col 0: Extended Strong's (may have letter suffix: G0001G, G0001H)
-  // Strip trailing letter suffix to get base number
-  const baseKey = cols[0].replace(/[A-Z]+$/, '');
-
-  // Col 6: one-word gloss
+  const baseKey = cols[0].replace(/[A-Z]+$/, ''); // strip suffix G0001G → G0001
+  if (tbesgLemma.has(baseKey)) continue;           // first entry wins
+  const lemma = cols[3]?.trim();
   const gloss = cols[6]?.trim();
-  if (!gloss || gloss === '') continue;
-
-  // First entry for this base key wins
-  if (!tbesgGloss.has(baseKey)) {
-    tbesgGloss.set(baseKey, gloss);
-  }
+  if (lemma) tbesgLemma.set(baseKey, lemma);
+  if (gloss) tbesgGloss.set(baseKey, gloss);
 }
-console.log(`  Loaded ${tbesgGloss.size} Strong's glosses`);
+console.log(`  Loaded ${tbesgLemma.size} lemmas, ${tbesgGloss.size} fallback glosses`);
+
+// ── 1b. Load LSJ index ────────────────────────────────────────────────────────
+console.log('Loading LSJ index…');
+const lsjIndex = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'lxx', 'lsj-index.json'), 'utf8'));
+console.log(`  ${Object.keys(lsjIndex).length} LSJ entries`);
+
+function normalizeGreek(s) {
+  if (!s) return '';
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+function lookupLSJ(lemma) {
+  return lsjIndex[normalizeGreek(lemma)] ?? null;
+}
+
+function resolveGloss(strongsNum) {
+  if (!strongsNum) return '[no gloss]';
+  const lemma = tbesgLemma.get(strongsNum);
+  return lookupLSJ(lemma) ?? tbesgGloss.get(strongsNum) ?? '[no gloss]';
+}
 
 // ── 2. Parse versification: verse ref → start word index (1-based) ───────────
 console.log('Parsing versification…');
@@ -184,7 +199,7 @@ for (const { prefix, file, name } of TORAH_BOOKS) {
       const orig = words[i] ?? '';
       const strongsRaw = strongs[i] ?? '';
       const strongsNum = normalizeStrongs(strongsRaw);
-      const eng = strongsNum ? (tbesgGloss.get(strongsNum) ?? '[no gloss]') : '[no gloss]';
+      const eng = resolveGloss(strongsNum);
       if (eng === '[no gloss]') noGloss++;
       totalWords++;
       rowWords.push({ orig, strongs: strongsNum || strongsRaw || null, eng });

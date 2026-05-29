@@ -3,7 +3,6 @@ import { buildPrompt, buildVerifyPrompt, type MTWordEntry, type LXXWordEntry, ty
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-
 export interface StreamMeta {
   ref: string;
   title: string;
@@ -11,11 +10,11 @@ export interface StreamMeta {
 }
 
 export interface Correction {
-  row: number;
-  column: string;
+  group: number;
+  tradition: string;
   field: string;
-  was: string;
-  now: string;
+  was: unknown;
+  now: unknown;
   reason: string;
 }
 
@@ -23,7 +22,6 @@ export interface VerificationResult {
   verified: boolean;
   skipped?: boolean;
   corrections: Correction[];
-  corrected_rows?: unknown[];
 }
 
 /**
@@ -65,46 +63,10 @@ function extractJSON(textContent: string): unknown {
 }
 
 /**
- * Extract complete row objects from a partial streaming buffer, skipping the
- * first `emitted` rows already sent to the callback.
- */
-function extractNewRows(buffer: string, emitted: number): unknown[] {
-  const markerIdx = buffer.indexOf('"rows":[');
-  if (markerIdx === -1) return [];
-
-  let pos = markerIdx + 8;
-  let depth = 0;
-  let rowStart = -1;
-  const rows: unknown[] = [];
-  let inString = false;
-  let escape = false;
-
-  while (pos < buffer.length) {
-    const ch = buffer[pos];
-    if (escape) { escape = false; pos++; continue; }
-    if (ch === '\\' && inString) { escape = true; pos++; continue; }
-    if (ch === '"') { inString = !inString; pos++; continue; }
-    if (inString) { pos++; continue; }
-    if (ch === '{') { if (depth === 0) rowStart = pos; depth++; }
-    else if (ch === '}') {
-      depth--;
-      if (depth === 0 && rowStart !== -1) {
-        try { rows.push(JSON.parse(buffer.slice(rowStart, pos + 1))); } catch { /* skip malformed */ }
-        rowStart = -1;
-      }
-    }
-    pos++;
-  }
-
-  return rows.slice(emitted);
-}
-
-/**
- * Try to extract ref/title/subtitle as soon as the "rows":[ marker appears.
- * Returns null if the fields aren't yet available.
+ * Try to extract ref/title/subtitle as soon as the "groups":[ marker appears.
  */
 function tryExtractMeta(buffer: string): StreamMeta | null {
-  if (!buffer.includes('"rows":[')) return null;
+  if (!buffer.includes('"groups":[')) return null;
   const get = (field: string): string | null => {
     const m = buffer.match(new RegExp(`"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
     return m ? m[1] : null;
@@ -116,7 +78,7 @@ function tryExtractMeta(buffer: string): StreamMeta | null {
 }
 
 /**
- * Non-streaming alignment (used as internal implementation for the stream wrapper).
+ * Non-streaming alignment — returns the full groups JSON.
  */
 export async function alignWithClaude(
   ref: string,
@@ -159,15 +121,15 @@ export async function alignWithClaude(
 }
 
 /**
- * Streaming alignment — calls onRow for each row as it completes in the stream,
- * and onMeta as soon as ref/title/subtitle are available. Returns the full parsed JSON.
+ * Streaming alignment — streams Claude's response for connection keepalive.
+ * Calls onMeta as soon as ref/title/subtitle are available in the stream.
+ * Returns the full parsed JSON when streaming completes.
  */
 export async function alignWithClaudeStream(
   ref: string,
   mt: string,
   lxx: string,
   vul: string,
-  onRow: (row: unknown) => void,
   onMeta: (meta: StreamMeta) => void,
   mtWords: MTWordEntry[] | null = null,
   lxxWords: LXXWordEntry[] | null = null,
@@ -185,17 +147,14 @@ export async function alignWithClaudeStream(
       stream: true,
     });
   } catch (err) {
-    // If streaming is unsupported, fall back to non-streaming
     console.warn('Streaming create failed, falling back to non-streaming:', err);
     const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
-    const d = data as { ref: string; title: string; subtitle: string; rows: unknown[] };
+    const d = data as { ref: string; title: string; subtitle: string };
     onMeta({ ref: d.ref, title: d.title, subtitle: d.subtitle });
-    for (const row of d.rows ?? []) onRow(row);
     return data;
   }
 
   let fullText = '';
-  let rowsEmitted = 0;
   let metaEmitted = false;
 
   for await (const event of rawStream) {
@@ -210,23 +169,19 @@ export async function alignWithClaudeStream(
         const meta = tryExtractMeta(fullText);
         if (meta) { onMeta(meta); metaEmitted = true; }
       }
-
-      const newRows = extractNewRows(fullText, rowsEmitted);
-      for (const row of newRows) { onRow(row); rowsEmitted++; }
     }
   }
 
-  console.log(`\n=== Stream done for ${ref} | chars: ${fullText.length} | rows emitted: ${rowsEmitted} ===`);
+  console.log(`\n=== Stream done for ${ref} | chars: ${fullText.length} ===`);
 
   return extractJSON(fullText);
 }
 
 /**
- * Second-pass verification — no web search, just lexical review.
- * Returns corrections (possibly empty).
+ * Second-pass verification of alignment groups.
  */
-export async function verifyAlignment(ref: string, rows: unknown[]): Promise<VerificationResult> {
-  const prompt = buildVerifyPrompt(ref, rows);
+export async function verifyAlignment(ref: string, groups: unknown[], traditions: unknown): Promise<VerificationResult> {
+  const prompt = buildVerifyPrompt(ref, groups, traditions);
 
   try {
     const response = await client.messages.create({
