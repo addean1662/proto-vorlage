@@ -41,10 +41,10 @@ interface AlignedStreamsProps {
 }
 
 const COLS = [
-  { key: 'dss' as const, label: 'Dead Sea Scrolls', color: '#c4a882', isHebrew: true,  date: 'c. 250 BCE–68 CE',  glossSource: 'Academic glosses' },
+  { key: 'dss' as const, label: 'Dead Sea Scrolls', color: '#c4a882', isHebrew: true,  date: 'c. 250 BCE–68 CE',  glossSource: 'Brown-Driver-Briggs' },
   { key: 'lxx' as const, label: 'Septuagint',       color: '#7ea8be', isHebrew: false, date: 'c. 280–150 BCE',    glossSource: 'TBESG' },
   { key: 'vul' as const, label: 'Vulgate',           color: '#a8b896', isHebrew: false, date: 'c. 382–405 CE',    glossSource: "Whitaker's Words" },
-  { key: 'mt'  as const, label: 'Masoretic Text',   color: '#d4a574', isHebrew: true,  date: 'c. 700–900 CE',    glossSource: 'BDB' },
+  { key: 'mt'  as const, label: 'Masoretic Text',   color: '#d4a574', isHebrew: true,  date: 'c. 700–900 CE',    glossSource: 'Brown-Driver-Briggs' },
 ] as const;
 
 type ColKey = typeof COLS[number]['key'];
@@ -304,7 +304,7 @@ export default function AlignedStreams({
               borderBottom: `2px solid ${col.color}40`,
               borderLeft: ci === 0 ? 'none' : '1px solid rgba(200,170,120,.08)',
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'stretch',
             }}
           >
             {/* Left half — right-aligned, mirrors source text column */}

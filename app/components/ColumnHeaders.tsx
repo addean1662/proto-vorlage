@@ -3,10 +3,10 @@
 import Link from 'next/link';
 
 const COLUMNS = [
-  { key: 'dss', label: 'Dead Sea Scrolls', date: 'c. 250 BCE–68 CE', color: '#c4a882', glossSource: 'Academic glosses' },
+  { key: 'dss', label: 'Dead Sea Scrolls', date: 'c. 250 BCE–68 CE', color: '#c4a882', glossSource: 'Brown-Driver-Briggs' },
   { key: 'lxx', label: 'Septuagint',       date: 'c. 280–150 BCE',   color: '#7ea8be', glossSource: 'TBESG' },
   { key: 'vul', label: 'Vulgate',          date: 'c. 382–405 CE',    color: '#a8b896', glossSource: "Whitaker's Words" },
-  { key: 'mt',  label: 'Masoretic Text',   date: 'c. 700–900 CE',    color: '#d4a574', glossSource: 'BDB' },
+  { key: 'mt',  label: 'Masoretic Text',   date: 'c. 700–900 CE',    color: '#d4a574', glossSource: 'Brown-Driver-Briggs' },
 ];
 
 export default function ColumnHeaders() {
@@ -27,7 +27,7 @@ export default function ColumnHeaders() {
             background: '#0f0d0a',
             borderBottom: `2px solid ${col.color}40`,
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'stretch',
           }}
         >
           {/* Left half — right-aligned, above source text */}
