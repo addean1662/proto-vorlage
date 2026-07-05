@@ -1,6 +1,6 @@
 # proto-vorlage
 
-Next.js 15 app with React 19, Tailwind CSS, TypeScript, and Anthropic SDK.
+Next.js 16 app with React 19, Tailwind CSS, TypeScript, and Anthropic SDK.
 
 ## Dev Server
 
