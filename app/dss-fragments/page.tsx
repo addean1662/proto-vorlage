@@ -9,8 +9,6 @@ export const metadata = {
 const CATEGORIES: DSSCategory[] = ['biblical', 'commentary', 'parabiblical'];
 
 const TIER1 = DSS_WITNESSES.filter(w => w.tier === 1);
-const TORAH_BOOKS = ['Gen', 'Exod', 'Lev', 'Num', 'Deut'] as const;
-
 export default function DSSFragmentsPage() {
   const total = TIER1.length;
   const byCat = Object.fromEntries(

@@ -7,7 +7,7 @@ interface DSSBadgeProps {
   frag: string | null;
 }
 
-export default function DSSBadge({ frag }: DSSBadgeProps) {
+export default function DSSBadge({}: DSSBadgeProps) {
   const [hovered, setHovered] = useState(false);
 
   const tooltip = 'Lost — not preserved in any known scroll';

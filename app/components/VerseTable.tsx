@@ -51,6 +51,13 @@ export default function VerseTable({ data, fromCache, streaming }: VerseTablePro
         </p>
       </div>
 
+      <div style={{ margin: '0 0 14px', padding: '10px 12px', border: '1px solid rgba(200,170,120,.12)', borderRadius: 6, background: 'rgba(200,170,120,.035)' }}>
+        <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>Evidence Status</div>
+        <div style={{ fontSize: 12, color: 'rgba(220,205,175,.7)', lineHeight: 1.55 }}>
+          Legacy cached alignment. Source words and glosses are shown with generated alignment; verify against the cited editions before scholarly citation.
+        </div>
+      </div>
+
       {/* Table */}
       <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(200,170,120,.1)' }}>
         <ColumnHeaders />

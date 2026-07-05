@@ -1,10 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+import { Redis } from '@upstash/redis';
 
 // ⚠️  CACHE SAFETY: data/cache/ must NEVER be wiped by automated scripts.
 // All cache-clearing requires explicit user instruction or a dedicated admin endpoint.
 
 const CACHE_DIR = path.join(process.cwd(), 'data', 'cache');
+
+function isVercelRuntime(): boolean {
+  return process.env.VERCEL === '1';
+}
 
 function ensureCacheDir() {
   if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
@@ -14,16 +19,17 @@ function safeKey(key: string): string {
   return key.replace(/[^a-z0-9_\-]/gi, '_');
 }
 
-function isRedisConfigured(): boolean {
+export function isRedisConfigured(): boolean {
   return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }
 
-function getRedis() {
-  const { Redis } = require('@upstash/redis');
+export function getRedis() {
   return Redis.fromEnv();
 }
 
 export async function getCachedVerse(key: string): Promise<unknown> {
+  if (isVercelRuntime() && !isRedisConfigured()) return null;
+
   if (!isRedisConfigured()) {
     ensureCacheDir();
     const file = path.join(CACHE_DIR, `${safeKey(key)}.json`);
@@ -33,16 +39,21 @@ export async function getCachedVerse(key: string): Promise<unknown> {
   return await getRedis().get(`verse:${key}`);
 }
 
-export async function cacheVerse(key: string, data: unknown): Promise<void> {
+export async function cacheVerse(key: string, data: unknown): Promise<boolean> {
+  if (isVercelRuntime() && !isRedisConfigured()) return false;
+
   if (!isRedisConfigured()) {
     ensureCacheDir();
     fs.writeFileSync(path.join(CACHE_DIR, `${safeKey(key)}.json`), JSON.stringify(data));
-    return;
+    return true;
   }
   await getRedis().set(`verse:${key}`, data);
+  return true;
 }
 
 export async function getCachedCount(): Promise<number> {
+  if (isVercelRuntime() && !isRedisConfigured()) return 0;
+
   if (!isRedisConfigured()) {
     ensureCacheDir();
     return fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.json')).length;
@@ -52,6 +63,8 @@ export async function getCachedCount(): Promise<number> {
 }
 
 export async function clearCachedVerse(key: string): Promise<void> {
+  if (isVercelRuntime() && !isRedisConfigured()) return;
+
   if (!isRedisConfigured()) {
     const file = path.join(CACHE_DIR, `${safeKey(key)}.json`);
     if (fs.existsSync(file)) fs.unlinkSync(file);
@@ -68,6 +81,8 @@ export async function incrementCachedCount(): Promise<void> {
 }
 
 export async function clearAllCached(): Promise<number> {
+  if (isVercelRuntime() && !isRedisConfigured()) return 0;
+
   if (!isRedisConfigured()) {
     ensureCacheDir();
     const files = fs.readdirSync(CACHE_DIR).filter(f => f.endsWith('.json'));
@@ -76,7 +91,7 @@ export async function clearAllCached(): Promise<number> {
   }
   const redis = getRedis();
   // Scan all verse keys and delete them, then reset the count
-  let cursor = 0;
+  let cursor = '0';
   let deleted = 0;
   do {
     const result = await redis.scan(cursor, { match: 'verse:*', count: 100 });
@@ -86,7 +101,7 @@ export async function clearAllCached(): Promise<number> {
       await redis.del(...keys);
       deleted += keys.length;
     }
-  } while (cursor !== 0);
+  } while (cursor !== '0');
   await redis.set('__verse_count__', 0);
   return deleted;
 }

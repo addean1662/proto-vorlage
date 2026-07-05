@@ -105,8 +105,6 @@ function Cell({
   const isLost = dssEntry?.status === 'lost';
   const isDash = !isLost && (entry.orig === '—' || entry.orig === '-');
   const isAttested = dssEntry?.status === 'attested';
-  const dimmed = isDash || isLost;
-
   // Attested DSS cell — scroll covers this verse but no transcription entered yet.
   // Show siglum only; no dot, no text. The blank signals nothing has been entered.
   if (isAttested) {
@@ -265,7 +263,7 @@ function Cell({
   );
 }
 
-export default function WordRow({ row, index, animateDSS }: WordRowProps) {
+export default function WordRow({ row, animateDSS }: WordRowProps) {
   return (
     <div
       className="g4"

@@ -25,12 +25,7 @@ function SkeletonRow() {
   );
 }
 
-interface LoadingSkeletonProps {
-  phase: string;
-  elapsed: number;
-}
-
-export default function LoadingSkeleton({ phase: _phase, elapsed: _elapsed }: LoadingSkeletonProps) {
+export default function LoadingSkeleton() {
   return (
     <div style={{ width: '100%' }}>
       {/* Verse header skeleton */}

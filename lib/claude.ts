@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import type { RawMessageStreamEvent } from '@anthropic-ai/sdk/resources/messages/messages';
 import { buildPrompt, buildVerifyPrompt, type MTWordEntry, type LXXWordEntry, type VulWordEntry } from './prompts';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -108,14 +109,14 @@ export async function alignWithClaude(
     throw err;
   });
 
-  console.log(`\n=== Claude response for ${ref} | stop_reason: ${response.stop_reason} | blocks: ${response.content.length} ===`);
-
   const textContent = response.content
     .filter((b): b is Anthropic.TextBlock => b.type === 'text')
     .map((b) => b.text)
     .join('');
 
-  console.log(`\n=== RAW TEXT (first 500 chars) ===\n${textContent.slice(0, 500)}\n=== END RAW ===\n`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Claude response for ${ref} | stop_reason: ${response.stop_reason} | blocks: ${response.content.length}`);
+  }
 
   return extractJSON(textContent);
 }
@@ -137,10 +138,9 @@ export async function alignWithClaudeStream(
 ): Promise<unknown> {
   const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let rawStream: AsyncIterable<any>;
+  let rawStream: AsyncIterable<RawMessageStreamEvent>;
   try {
-    rawStream = await (client.messages.create as Function)({
+    rawStream = await client.messages.create({
       model: 'claude-opus-4-6',
       max_tokens: 16000,
       messages: [{ role: 'user', content: prompt }],
@@ -172,7 +172,9 @@ export async function alignWithClaudeStream(
     }
   }
 
-  console.log(`\n=== Stream done for ${ref} | chars: ${fullText.length} ===`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Claude stream done for ${ref} | chars: ${fullText.length}`);
+  }
 
   return extractJSON(fullText);
 }

@@ -47,7 +47,51 @@ const COLS = [
   { key: 'mt'  as const, label: 'Masoretic Text',   color: '#d4a574', isHebrew: true,  date: 'c. 700–900 CE',    glossSource: 'Brown-Driver-Briggs' },
 ] as const;
 
-type ColKey = typeof COLS[number]['key'];
+const SOURCE_NOTES = {
+  dss: 'DSS cells show manuscript preservation status. Extant readings are manuscript evidence; lost cells mean no preserved word is available for that MT position.',
+  lxx: 'LXX tokens are source-order Greek data. Alignment to Hebrew is generated and should be checked before citation.',
+  vul: 'Vulgate tokens are source-order Latin data. Alignment to Hebrew is generated and may reflect interpretive translation choices.',
+  mt: 'MT tokens are the anchor sequence from OSHB / Westminster Leningrad Codex. Alignment groups are generated around this sequence.',
+} as const;
+
+function EvidenceStatus({
+  loadingAlignment,
+  groupCount,
+  mtCount,
+  dssCounts,
+}: {
+  loadingAlignment?: boolean;
+  groupCount: number;
+  mtCount: number;
+  dssCounts: Record<DSSEntry['status'], number>;
+}) {
+  const statusText = loadingAlignment
+    ? 'AI alignment pending'
+    : groupCount > 0
+      ? 'AI alignment generated; verify before citation'
+      : 'No alignment map available';
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, margin: '0 0 14px' }}>
+      <div style={{ padding: '10px 12px', border: '1px solid rgba(200,170,120,.12)', borderRadius: 6, background: 'rgba(200,170,120,.035)' }}>
+        <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>Alignment Status</div>
+        <div style={{ fontSize: 13, color: 'rgba(220,205,175,.78)', lineHeight: 1.45 }}>{statusText}</div>
+        <div style={{ fontSize: 11, color: 'rgba(200,180,150,.38)', marginTop: 4 }}>{groupCount} groups for {mtCount} MT tokens</div>
+      </div>
+      <div style={{ padding: '10px 12px', border: '1px solid rgba(200,170,120,.12)', borderRadius: 6, background: 'rgba(200,170,120,.035)' }}>
+        <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>DSS Evidence</div>
+        <div style={{ fontSize: 12, color: 'rgba(220,205,175,.7)', lineHeight: 1.55 }}>
+          {dssCounts.extant} extant / {dssCounts.partial} partial / {dssCounts.attested} attested / {dssCounts.lost} lost
+        </div>
+        <div style={{ fontSize: 11, color: 'rgba(200,180,150,.38)', marginTop: 4 }}>DSS status is preservation evidence, not an automatic variant claim.</div>
+      </div>
+      <div style={{ padding: '10px 12px', border: '1px solid rgba(200,170,120,.12)', borderRadius: 6, background: 'rgba(200,170,120,.035)' }}>
+        <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>Citation Rule</div>
+        <div style={{ fontSize: 12, color: 'rgba(220,205,175,.7)', lineHeight: 1.55 }}>Cite the underlying editions/manuscripts. Treat hover links and alignment groups as generated research aids.</div>
+      </div>
+    </div>
+  );
+}
 
 function HoverTooltip({ children, content }: { children: React.ReactNode; content: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
@@ -148,6 +192,23 @@ function WordChip({
     : null;
 
   const fragInfo = frag ? DSS_FRAG_DATES[frag] : null;
+  const statusLabel = status
+    ? status === 'lost'
+      ? 'lost: no preserved DSS word for this MT position'
+      : status === 'attested'
+        ? 'attested: scroll covers the verse, but no transcription is entered here'
+        : status === 'partial'
+          ? 'partial: fragmentary or incomplete preservation'
+          : 'extant: preserved manuscript reading displayed'
+    : null;
+  const dssTooltip = fragInfo || statusLabel
+    ? (
+      <span>
+        {statusLabel && <span>{statusLabel}</span>}
+        {fragInfo && <span>{statusLabel ? <br /> : null}{fragInfo.date}<br />{fragInfo.source}</span>}
+      </span>
+    )
+    : null;
   const sigLabel = frag ? `${frag}${paleo ? ' · paleo' : ''}` : null;
 
   return (
@@ -169,7 +230,7 @@ function WordChip({
     >
       {/* Siglum — centered above both source and gloss */}
       {sigLabel && (
-        <HoverTooltip content={fragInfo ? <span>{fragInfo.date}<br />{fragInfo.source}</span> : null}>
+        <HoverTooltip content={dssTooltip}>
           <span style={{
             display: 'block',
             textAlign: 'center',
@@ -230,6 +291,11 @@ function WordChip({
           )}
         </div>
       </div>
+      {highlighted && groupId !== null && (
+        <div style={{ fontSize: 9, color: 'rgba(200,180,150,.32)', letterSpacing: '.08em', textTransform: 'uppercase', textAlign: 'center' }}>
+          AI group {groupId + 1}
+        </div>
+      )}
     </div>
   );
 }
@@ -267,6 +333,11 @@ export default function AlignedStreams({
     vul: traditions.vul,
   };
 
+  const dssCounts = traditions.dss.reduce<Record<DSSEntry['status'], number>>((acc, word) => {
+    acc[word.status] += 1;
+    return acc;
+  }, { extant: 0, attested: 0, partial: 0, lost: 0 });
+
   return (
     <div style={{ width: '100%' }}>
       {/* Verse title */}
@@ -285,6 +356,13 @@ export default function AlignedStreams({
           </p>
         )}
       </div>
+
+      <EvidenceStatus
+        loadingAlignment={loadingAlignment}
+        groupCount={groups.length}
+        mtCount={traditions.mt.length}
+        dssCounts={dssCounts}
+      />
 
       {/* Four independent word streams */}
       <div style={{
@@ -311,6 +389,9 @@ export default function AlignedStreams({
             <div style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingRight: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: col.color, textAlign: 'right' }}>{col.label}</div>
               <div style={{ fontSize: 10, color: 'rgba(200,180,150,.4)', fontStyle: 'italic', marginTop: 2 }}>{col.date}</div>
+              <HoverTooltip content={SOURCE_NOTES[col.key]}>
+                <div style={{ fontSize: 10, color: 'rgba(200,180,150,.35)', marginTop: 4, textDecoration: 'underline dotted rgba(200,180,150,.25)', cursor: 'help' }}>source note</div>
+              </HoverTooltip>
             </div>
             {/* Right half — left-aligned, mirrors gloss column */}
             <div style={{ flex: '1 1 50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>

@@ -6,21 +6,9 @@ import { alignWithClaudeStream, verifyAlignment, type StreamMeta } from '@/lib/c
 import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, getDSSVariants, type OSHBWord, type LXXWord, type VulgateWord } from '@/lib/lexicon';
 import { normalizeGloss } from '@/lib/normalize-gloss';
 import { matchDSSWord } from '@/lib/dss-gloss';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const maxDuration = 300;
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 3_600_000 });
-    return true;
-  }
-  if (entry.count >= 10) return false;
-  entry.count++;
-  return true;
-}
 
 // ── Display types ─────────────────────────────────────────────────────────────
 
@@ -100,6 +88,8 @@ function assembleDSS(
   const LOST: DSSEntry = { orig: '—', eng: '—', frag: null, status: 'lost', paleo: false };
   const DASH: DSSEntry = { orig: '—', eng: '—', frag: null, status: 'extant', paleo: false };
 
+  void DASH;
+
   return Array.from({ length: mtLength }, (_, i) => {
     if (!prebuilt) return LOST;
 
@@ -137,8 +127,6 @@ function assembleDSS(
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
-  const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-
   let body: { ref?: string };
   try { body = await request.json(); }
   catch { return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }); }
@@ -185,7 +173,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       // 2. Rate limit
-      if (!checkRateLimit(ip)) {
+      if (!(await checkRateLimit(request.headers.get('x-forwarded-for')))) {
         emit('error', { message: 'rate_limited' });
         close();
         return;
@@ -243,10 +231,11 @@ export async function POST(request: NextRequest): Promise<Response> {
           emit('error', { message: status === 429 ? 'rate_limited' : `Claude alignment failed: ${(err as Error).message}` });
           close(); return;
         }
-        const a = aligned as { ref: string; title: string; subtitle: string };
-        emit('done', { data: aligned, fromCache: false });
-        await cacheVerse(key, aligned);
-        await incrementCachedCount();
+        const cacheStored = await cacheVerse(key, aligned);
+        if (cacheStored) {
+          await incrementCachedCount();
+        }
+        emit('done', { data: aligned, fromCache: false, cacheStored });
         close();
         return;
       }
@@ -309,10 +298,12 @@ export async function POST(request: NextRequest): Promise<Response> {
         groups,
       };
 
-      await cacheVerse(key, finalData);
-      await incrementCachedCount();
+      const cacheStored = await cacheVerse(key, finalData);
+      if (cacheStored) {
+        await incrementCachedCount();
+      }
 
-      emit('done', { data: finalData, fromCache: false, corrections, verificationSkipped: verification.skipped ?? false });
+      emit('done', { data: finalData, fromCache: false, cacheStored, corrections, verificationSkipped: verification.skipped ?? false });
       close();
 
     } catch (err) {

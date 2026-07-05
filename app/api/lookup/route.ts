@@ -1,30 +1,35 @@
 import { NextRequest } from 'next/server';
 import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
-import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clearCachedVerse, clearAllCached } from '@/lib/cache';
+import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clearCachedVerse, clearAllCached, isRedisConfigured } from '@/lib/cache';
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
 import { alignWithClaude } from '@/lib/claude';
+import { checkRateLimit } from '@/lib/rate-limit';
 
-// Rate limiting: simple in-memory store (resets on server restart / per Vercel instance)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 3_600_000 });
-    return true;
-  }
-  if (entry.count >= 10) return false;
-  entry.count++;
-  return true;
+function isAuthorizedAdmin(request: NextRequest): boolean {
+  const expected = process.env.CACHE_ADMIN_SECRET;
+  if (!expected) return false;
+  return request.headers.get('x-cache-admin-secret') === expected;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const count = await getCachedCount();
+  if (isAuthorizedAdmin(request)) {
+    const redisConfigured = isRedisConfigured();
+    return Response.json({
+      count,
+      cacheBackend: redisConfigured ? 'upstash-redis' : process.env.VERCEL === '1' ? 'disabled' : 'local-file',
+      rateLimitBackend: redisConfigured ? 'upstash-redis' : 'memory',
+      cacheWritable: redisConfigured || process.env.VERCEL !== '1',
+    });
+  }
   return Response.json({ count });
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!isAuthorizedAdmin(request)) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   let body: { refs?: string[]; all?: boolean };
   try { body = await request.json(); } catch { body = {}; }
 
@@ -44,8 +49,6 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-
   let body: { ref?: string };
   try {
     body = await request.json();
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate limit only for uncached lookups
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit(request.headers.get('x-forwarded-for')))) {
     return Response.json(
       { error: 'Rate limit: 10 new verse lookups per hour.' },
       { status: 429 }
@@ -110,8 +113,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Cache and return
-  await cacheVerse(key, aligned);
-  await incrementCachedCount();
+  const cacheStored = await cacheVerse(key, aligned);
+  if (cacheStored) {
+    await incrementCachedCount();
+  }
 
-  return Response.json({ data: aligned, fromCache: false });
+  return Response.json({ data: aligned, fromCache: false, cacheStored });
 }
