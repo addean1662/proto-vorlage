@@ -7,6 +7,7 @@ import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, getDSSVariants, 
 import { normalizeGloss } from '@/lib/normalize-gloss';
 import { matchDSSWord } from '@/lib/dss-gloss';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 export const maxDuration = 300;
 
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       // 1. Cache hit
       const cached = await getCachedVerse(key);
       if (cached) {
+        logger.info('lookup_stream_cache_hit', { ref: canonical });
         emit('cached', { data: cached, fromCache: true });
         close();
         return;
@@ -174,6 +176,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       // 2. Rate limit
       if (!(await checkRateLimit(request.headers.get('x-forwarded-for')))) {
+        logger.warn('lookup_stream_rate_limited', { ref: canonical });
         emit('error', { message: 'rate_limited' });
         close();
         return;
@@ -186,6 +189,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         mt = await fetchMasoretText(canonical);
         emit('source_preview', { source: 'mt', text: mt });
       } catch (err) {
+        logger.error('lookup_stream_source_failed', { ref: canonical, source: 'mt', message: (err as Error).message });
         emit('error', { message: `Failed to fetch Masoretic Text: ${(err as Error).message}` });
         close(); return;
       }
@@ -195,6 +199,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         lxx = await fetchSeptuagint(canonical);
         emit('source_preview', { source: 'lxx', text: lxx });
       } catch (err) {
+        logger.error('lookup_stream_source_failed', { ref: canonical, source: 'lxx', message: (err as Error).message });
         emit('error', { message: `Failed to fetch Septuagint: ${(err as Error).message}` });
         close(); return;
       }
@@ -204,6 +209,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         vul = await fetchVulgate(canonical);
         emit('source_preview', { source: 'vul', text: vul });
       } catch (err) {
+        logger.error('lookup_stream_source_failed', { ref: canonical, source: 'vul', message: (err as Error).message });
         emit('error', { message: `Failed to fetch Vulgate: ${(err as Error).message}` });
         close(); return;
       }
@@ -228,6 +234,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           );
         } catch (err) {
           const status = (err as { status?: number })?.status;
+          logger.error('lookup_stream_alignment_failed', { ref: canonical, status, message: (err as Error).message });
           emit('error', { message: status === 429 ? 'rate_limited' : `Claude alignment failed: ${(err as Error).message}` });
           close(); return;
         }
@@ -235,6 +242,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         if (cacheStored) {
           await incrementCachedCount();
         }
+        logger.info('lookup_stream_completed', { ref: canonical, cacheStored, legacy: true });
         emit('done', { data: aligned, fromCache: false, cacheStored });
         close();
         return;
@@ -267,6 +275,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         );
       } catch (err) {
         const status = (err as { status?: number })?.status;
+        logger.error('lookup_stream_alignment_failed', { ref: canonical, status, message: (err as Error).message });
         emit('error', { message: status === 429 ? 'rate_limited' : `Claude alignment failed: ${(err as Error).message}` });
         close(); return;
       }
@@ -302,11 +311,13 @@ export async function POST(request: NextRequest): Promise<Response> {
       if (cacheStored) {
         await incrementCachedCount();
       }
+      logger.info('lookup_stream_completed', { ref: canonical, cacheStored, groups: groups.length, verificationSkipped: verification.skipped ?? false });
 
       emit('done', { data: finalData, fromCache: false, cacheStored, corrections, verificationSkipped: verification.skipped ?? false });
       close();
 
     } catch (err) {
+      logger.error('lookup_stream_unhandled_error', { ref: canonical, message: (err as Error).message ?? 'Unknown error' });
       emit('error', { message: (err as Error).message ?? 'Unknown error' });
       close();
     }

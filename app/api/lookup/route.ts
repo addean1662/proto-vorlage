@@ -4,6 +4,7 @@ import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clear
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
 import { alignWithClaude } from '@/lib/claude';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 function isAuthorizedAdmin(request: NextRequest): boolean {
   const expected = process.env.CACHE_ADMIN_SECRET;
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   if (!isAuthorizedAdmin(request)) {
+    logger.warn('cache_delete_forbidden');
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -75,11 +77,13 @@ export async function POST(request: NextRequest) {
   // Check cache first
   const cached = await getCachedVerse(key);
   if (cached) {
+    logger.info('lookup_cache_hit', { ref: canonical });
     return Response.json({ data: cached, fromCache: true });
   }
 
   // Rate limit only for uncached lookups
   if (!(await checkRateLimit(request.headers.get('x-forwarded-for')))) {
+    logger.warn('lookup_rate_limited', { ref: canonical });
     return Response.json(
       { error: 'Rate limit: 10 new verse lookups per hour.' },
       { status: 429 }
@@ -96,6 +100,7 @@ export async function POST(request: NextRequest) {
     ]);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    logger.error('lookup_source_fetch_failed', { ref: canonical, message });
     return Response.json({ error: `Failed to fetch source texts: ${message}` }, { status: 502 });
   }
 
@@ -109,6 +114,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'rate_limited' }, { status: 429 });
     }
     const message = err instanceof Error ? err.message : String(err);
+    logger.error('lookup_alignment_failed', { ref: canonical, status, message });
     return Response.json({ error: `Claude alignment failed: ${message}` }, { status: 502 });
   }
 
@@ -117,6 +123,7 @@ export async function POST(request: NextRequest) {
   if (cacheStored) {
     await incrementCachedCount();
   }
+  logger.info('lookup_completed', { ref: canonical, cacheStored });
 
   return Response.json({ data: aligned, fromCache: false, cacheStored });
 }
