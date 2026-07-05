@@ -31,12 +31,19 @@ type Traditions = {
 
 type AlignmentGroup = { lxx: number | null; mt: number | null; vul: number | null; };
 
+type Provenance = {
+  generatedAt?: string;
+  alignmentModel?: string;
+  review?: { status?: string; reviewedAt?: string; reviewer?: string; note?: string };
+};
+
 interface AlignedStreamsProps {
   ref: string;
   title: string;
   subtitle: string;
   traditions: Traditions;
   groups: AlignmentGroup[];
+  provenance?: Provenance;
   loadingAlignment?: boolean;
 }
 
@@ -59,11 +66,13 @@ function EvidenceStatus({
   groupCount,
   mtCount,
   dssCounts,
+  provenance,
 }: {
   loadingAlignment?: boolean;
   groupCount: number;
   mtCount: number;
   dssCounts: Record<DSSEntry['status'], number>;
+  provenance?: Provenance;
 }) {
   const statusText = loadingAlignment
     ? 'AI alignment pending'
@@ -77,6 +86,9 @@ function EvidenceStatus({
         <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>Alignment Status</div>
         <div style={{ fontSize: 13, color: 'rgba(220,205,175,.78)', lineHeight: 1.45 }}>{statusText}</div>
         <div style={{ fontSize: 11, color: 'rgba(200,180,150,.38)', marginTop: 4 }}>{groupCount} groups for {mtCount} MT tokens</div>
+        <div style={{ fontSize: 11, color: 'rgba(200,180,150,.38)', marginTop: 4 }}>
+          Review: {provenance?.review?.status ?? 'generated'}{provenance?.alignmentModel ? ` / ${provenance.alignmentModel}` : ''}
+        </div>
       </div>
       <div style={{ padding: '10px 12px', border: '1px solid rgba(200,170,120,.12)', borderRadius: 6, background: 'rgba(200,170,120,.035)' }}>
         <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.35)', marginBottom: 5 }}>DSS Evidence</div>
@@ -306,6 +318,7 @@ export default function AlignedStreams({
   subtitle,
   traditions,
   groups,
+  provenance,
   loadingAlignment,
 }: AlignedStreamsProps) {
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
@@ -362,6 +375,7 @@ export default function AlignedStreams({
         groupCount={groups.length}
         mtCount={traditions.mt.length}
         dssCounts={dssCounts}
+        provenance={provenance}
       />
 
       {/* Four independent word streams */}

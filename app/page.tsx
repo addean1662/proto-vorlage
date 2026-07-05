@@ -19,7 +19,7 @@ interface OldVerseData { ref: string; title: string; subtitle: string; rows: Ver
 // New (source-order) format
 interface Traditions { dss: DSSEntry[]; lxx: WordEntry[]; mt: WordEntry[]; vul: WordEntry[]; }
 interface AlignmentGroup { lxx: number | null; mt: number | null; vul: number | null; }
-interface NewVerseData { ref: string; title: string; subtitle: string; traditions: Traditions; groups: AlignmentGroup[]; }
+interface NewVerseData { ref: string; title: string; subtitle: string; traditions: Traditions; groups: AlignmentGroup[]; provenance?: { generatedAt?: string; alignmentModel?: string; review?: { status?: string; reviewedAt?: string; reviewer?: string; note?: string } }; }
 
 type VerseData = OldVerseData | NewVerseData;
 function isNewFormat(d: VerseData): d is NewVerseData { return 'traditions' in d; }
@@ -427,6 +427,7 @@ export default function Home() {
                   subtitle={displayData.subtitle}
                   traditions={displayData.traditions}
                   groups={displayData.groups}
+                  provenance={displayData.provenance}
                   loadingAlignment={alignmentLoading}
                 />
               ) : (

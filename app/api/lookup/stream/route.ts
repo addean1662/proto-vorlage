@@ -8,6 +8,7 @@ import { normalizeGloss } from '@/lib/normalize-gloss';
 import { matchDSSWord } from '@/lib/dss-gloss';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { createVerseProvenance, type VerseProvenance } from '@/lib/provenance';
 
 export const maxDuration = 300;
 
@@ -46,6 +47,7 @@ type NewVerseData = {
   subtitle: string;
   traditions: Traditions;
   groups: AlignmentGroup[];
+  provenance: VerseProvenance;
 };
 
 // ── Tradition assembly from local data ────────────────────────────────────────
@@ -305,6 +307,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         subtitle: alignedData.subtitle,
         traditions,
         groups,
+        provenance: createVerseProvenance(),
       };
 
       const cacheStored = await cacheVerse(key, finalData);
