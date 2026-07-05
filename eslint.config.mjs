@@ -13,6 +13,7 @@ const eslintConfig = [
   {
     ignores: [
       '.next/**',
+      '.vercel/**',
       'node_modules/**',
       'data/cache/**',
       'scripts/**',
