@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { RawMessageStreamEvent } from '@anthropic-ai/sdk/resources/messages/messages';
-import { buildPrompt, buildVerifyPrompt, type MTWordEntry, type LXXWordEntry, type VulWordEntry } from './prompts';
+import { buildPrompt, buildRepairPrompt, buildVerifyPrompt, type MTWordEntry, type LXXWordEntry, type VulWordEntry } from './prompts';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -23,6 +23,33 @@ export interface VerificationResult {
   verified: boolean;
   skipped?: boolean;
   corrections: Correction[];
+}
+
+export async function repairAlignmentGroups(
+  ref: string,
+  groups: unknown[],
+  traditions: unknown,
+  errors: unknown[],
+): Promise<unknown[]> {
+  const prompt = buildRepairPrompt(ref, groups, traditions, errors);
+
+  const response = await client.messages.create({
+    model: 'claude-opus-4-6',
+    max_tokens: 8000,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const textContent = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+
+  const repaired = extractJSON(textContent) as { groups?: unknown[] };
+  if (!Array.isArray(repaired.groups)) {
+    throw new Error('Repair response did not include a groups array.');
+  }
+
+  return repaired.groups;
 }
 
 /**
