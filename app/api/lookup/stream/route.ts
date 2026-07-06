@@ -2,13 +2,14 @@ import { NextRequest } from 'next/server';
 import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
 import { getCachedVerse, cacheVerse, incrementCachedCount } from '@/lib/cache';
 import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
-import { alignWithClaudeStream, verifyAlignment, type StreamMeta } from '@/lib/claude';
+import { alignWithClaudeStream, repairAlignmentGroups, verifyAlignment, type StreamMeta } from '@/lib/claude';
 import { getMTWords, getLXXWords, getVulgateWords, getDSSWords, getDSSVariants, type OSHBWord, type LXXWord, type VulgateWord } from '@/lib/lexicon';
 import { normalizeGloss } from '@/lib/normalize-gloss';
 import { matchDSSWord } from '@/lib/dss-gloss';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createVerseProvenance, type VerseProvenance } from '@/lib/provenance';
+import { validateAlignment, type AlignmentValidationReport } from '@/lib/alignment-validator';
 
 export const maxDuration = 300;
 
@@ -48,6 +49,7 @@ type NewVerseData = {
   traditions: Traditions;
   groups: AlignmentGroup[];
   provenance: VerseProvenance;
+  validation: AlignmentValidationReport;
 };
 
 // ── Tradition assembly from local data ────────────────────────────────────────
@@ -170,10 +172,14 @@ export async function POST(request: NextRequest): Promise<Response> {
       // 1. Cache hit
       const cached = await getCachedVerse(key);
       if (cached) {
-        logger.info('lookup_stream_cache_hit', { ref: canonical });
-        emit('cached', { data: cached, fromCache: true });
-        close();
-        return;
+        const cachedData = cached as { provenance?: unknown; validation?: AlignmentValidationReport };
+        if (cachedData.provenance && cachedData.validation?.valid === true) {
+          logger.info('lookup_stream_cache_hit', { ref: canonical });
+          emit('cached', { data: cached, fromCache: true });
+          close();
+          return;
+        }
+        logger.warn('lookup_stream_legacy_cache_ignored', { ref: canonical });
       }
 
       // 2. Rate limit
@@ -240,12 +246,8 @@ export async function POST(request: NextRequest): Promise<Response> {
           emit('error', { message: status === 429 ? 'rate_limited' : `Claude alignment failed: ${(err as Error).message}` });
           close(); return;
         }
-        const cacheStored = await cacheVerse(key, aligned);
-        if (cacheStored) {
-          await incrementCachedCount();
-        }
-        logger.info('lookup_stream_completed', { ref: canonical, cacheStored, legacy: true });
-        emit('done', { data: aligned, fromCache: false, cacheStored });
+        logger.warn('lookup_stream_legacy_alignment_not_cached', { ref: canonical });
+        emit('done', { data: aligned, fromCache: false, cacheStored: false });
         close();
         return;
       }
@@ -288,7 +290,29 @@ export async function POST(request: NextRequest): Promise<Response> {
         emit('meta', { ref: alignedData.ref, title: alignedData.title, subtitle: alignedData.subtitle });
       }
 
-      const groups: AlignmentGroup[] = alignedData.groups ?? [];
+      let groups: AlignmentGroup[] = alignedData.groups ?? [];
+      const validationInput = {
+        traditions,
+        groups,
+      };
+
+      let validation = validateAlignment(validationInput);
+      const repairAttempts = [];
+      for (let attempt = 1; !validation.valid && attempt <= 2; attempt += 1) {
+        emit('phase', { text: `Repairing alignment coverage (${attempt}/2)…` });
+        repairAttempts.push({ attempt, errors: validation.errors });
+        try {
+          groups = await repairAlignmentGroups(canonical, groups, {
+            mt: mtDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
+            lxx: lxxDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
+            vul: vulDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
+          }, validation.errors) as AlignmentGroup[];
+          validation = validateAlignment({ traditions, groups });
+        } catch (err) {
+          logger.error('lookup_stream_repair_failed', { ref: canonical, attempt, message: (err as Error).message });
+          break;
+        }
+      }
 
       // 6. Verification (non-fatal)
       const verification = await verifyAlignment(canonical, groups, {
@@ -299,6 +323,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       });
 
       const corrections = verification.skipped ? [] : verification.corrections;
+      const provenance = createVerseProvenance();
 
       // 7. Cache and done
       const finalData: NewVerseData = {
@@ -307,16 +332,32 @@ export async function POST(request: NextRequest): Promise<Response> {
         subtitle: alignedData.subtitle,
         traditions,
         groups,
-        provenance: createVerseProvenance(),
+        provenance,
+        validation: validateAlignment({ traditions, groups, provenance }, { requireProvenance: true }),
       };
 
-      const cacheStored = await cacheVerse(key, finalData);
+      const cacheStored = finalData.validation.valid ? await cacheVerse(key, finalData) : false;
       if (cacheStored) {
         await incrementCachedCount();
       }
-      logger.info('lookup_stream_completed', { ref: canonical, cacheStored, groups: groups.length, verificationSkipped: verification.skipped ?? false });
+      logger.info('lookup_stream_completed', {
+        ref: canonical,
+        cacheStored,
+        groups: groups.length,
+        validationValid: finalData.validation.valid,
+        repairAttempts: repairAttempts.length,
+        verificationSkipped: verification.skipped ?? false,
+      });
 
-      emit('done', { data: finalData, fromCache: false, cacheStored, corrections, verificationSkipped: verification.skipped ?? false });
+      emit('done', {
+        data: finalData,
+        fromCache: false,
+        cacheStored,
+        corrections,
+        validation: finalData.validation,
+        repairAttempts,
+        verificationSkipped: verification.skipped ?? false,
+      });
       close();
 
     } catch (err) {

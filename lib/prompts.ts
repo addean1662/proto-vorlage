@@ -138,3 +138,30 @@ If you find errors, respond with:
 
 Only flag genuine errors. ONLY return valid JSON, nothing else.`;
 }
+
+export function buildRepairPrompt(ref: string, groups: unknown[], traditions: unknown, errors: unknown[]): string {
+  return `You are repairing a biblical word-alignment map for ${ref}.
+
+The previous alignment failed deterministic validation. Repair ONLY the groups array.
+
+Validation errors:
+${JSON.stringify(errors, null, 2)}
+
+Authoritative token lists:
+${JSON.stringify(traditions, null, 2)}
+
+Previous groups:
+${JSON.stringify(groups, null, 2)}
+
+Rules:
+- Return ONLY valid JSON, no markdown.
+- Preserve this shape: {"groups":[{"mt":0,"lxx":0,"vul":0}]}
+- Use integer indexes or null only.
+- Every mt, lxx, and vul index must appear exactly once.
+- No duplicate indexes.
+- No out-of-bounds indexes.
+- If a Greek or Latin token has no Hebrew equivalent, use mt:null.
+- If a Hebrew token has no Greek or Latin equivalent, use lxx:null or vul:null.
+
+Respond with the repaired JSON object only.`;
+}
