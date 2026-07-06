@@ -40,6 +40,10 @@ npm audit --audit-level=moderate
 Production expects these Vercel environment variables:
 
 - `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY` if `ALIGNMENT_PROVIDER=openai`
+- `ALIGNMENT_PROVIDER` (`anthropic` by default, `openai` to use OpenAI)
+- `ANTHROPIC_ALIGNMENT_MODEL` (optional, defaults to `claude-opus-4-6`)
+- `OPENAI_ALIGNMENT_MODEL` (optional, defaults to `gpt-5.5`)
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `CACHE_ADMIN_SECRET`
