@@ -1,0 +1,10 @@
+{
+  "name": "@protovorlage/minimatch-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Legacy callable CommonJS API backed by patched minimatch 11",
+  "main": "index.cjs",
+  "dependencies": {
+    "minimatch-modern": "npm:minimatch@^11.0.1"
+  }
+}
