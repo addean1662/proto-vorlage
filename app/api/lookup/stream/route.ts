@@ -42,7 +42,7 @@ type Traditions = {
   vul: WordEntry[];  // in VUL source order
 };
 
-type AlignmentGroup = { sp: number | null; lxx: number | null; mt: number | null; vul: number | null; };
+type AlignmentGroup = { sp?: number | null; lxx: number | null; mt: number | null; vul: number | null; };
 
 type NewVerseData = {
   sourceNotes?: { sp?: string };
@@ -256,8 +256,22 @@ export async function POST(request: NextRequest): Promise<Response> {
       const sourceNotes = samaritan.note ? { sp: samaritan.note } : undefined;
       emit('traditions', { traditions, sourceNotes });
 
-      // 5. Stream Claude alignment (for connection keepalive; groups arrive at end)
-      emit('phase', { text: 'Aligning traditions and searching Dead Sea Scrolls…' });
+      // Preserve usable four-tradition links while adding SP. Indexes are reusable
+      // only when the cached source tokens still match the current source order.
+      const cachedData = cached as Partial<NewVerseData> | null;
+      const cachedGroups = cachedData?.groups?.map(g => ({ ...g, sp: null }));
+      const reusedCachedLinks = !!(cachedData?.provenance && cachedData.validation?.valid && cachedGroups?.length
+        && ['mt', 'lxx', 'vul'].every(key => {
+          const source = key as 'mt' | 'lxx' | 'vul';
+          const previous = cachedData.traditions?.[source];
+          return Array.isArray(previous) && previous.length === traditions[source].length
+            && previous.every((word, i) => word.orig === traditions[source][i].orig);
+        })
+        && validateAlignment({ traditions: { ...traditions, sp: undefined }, groups: cachedGroups }).valid);
+      if (reusedCachedLinks) emit('alignment', { groups: cachedGroups, complete: false });
+
+      // 5. Publish complete, structurally valid groups as the model writes them.
+      emit('phase', { text: 'Matching corresponding words…' });
 
       let aligned: unknown;
       let streamMeta: StreamMeta | null = null;
@@ -266,6 +280,11 @@ export async function POST(request: NextRequest): Promise<Response> {
           canonical, mt!, lxx!, vul!,
           (meta: StreamMeta) => { streamMeta = meta; emit('meta', meta); },
           mtWords, lxxWords, vulWords, samaritan.words,
+          (groups) => {
+            if (!reusedCachedLinks && validateAlignment({ traditions, groups }, { allowPartial: true }).valid) {
+              emit('alignment', { groups, complete: false });
+            }
+          },
         );
       } catch (err) {
         const status = (err as { status?: number })?.status;
@@ -305,7 +324,11 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
       }
 
+      // Hover is usable before the slower second-pass review and cache write.
+      if (validation.valid) emit('alignment', { groups, complete: true });
+
       // 6. Verification (non-fatal)
+      emit('phase', { text: 'Checking alignment; available hover links are ready…' });
       const verification = await verifyAlignment(canonical, groups, {
         sp: samaritan.words,
         mt: mtDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
@@ -363,7 +386,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   return new Response(readable, {
     headers: {
-      'Content-Type': 'text/event-stream',
+      'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
