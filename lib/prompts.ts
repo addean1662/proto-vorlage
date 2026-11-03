@@ -17,6 +17,8 @@ export interface VulWordEntry {
   eng: string;
 }
 
+export interface SPWordEntry { orig: string; eng: string; }
+
 /**
  * Build the Claude prompt for word alignment.
  * Returns alignment groups: each group links semantically equivalent words across traditions.
@@ -30,6 +32,7 @@ export function buildPrompt(
   mtWords: MTWordEntry[] | null,
   lxxWords: LXXWordEntry[] | null,
   vulWords: VulWordEntry[] | null = null,
+  spWords: SPWordEntry[] | null = null,
 ): string {
 
   const useMTIdx = mtWords !== null;
@@ -58,12 +61,17 @@ ${vulWords!.map((w, i) => `  [${i}] orig="${w.orig}" eng="${w.eng}"`).join('\n')
 ${vul}`;
 
   const coverageNote = [
+    spWords?.length ? `- sp: every index 0–${spWords.length - 1} must appear in exactly one group` : '',
     useMTIdx  ? `- mt:  every index 0–${mtWords!.length - 1} must appear in exactly one group` : '',
     useLXXIdx ? `- lxx: every index 0–${lxxWords!.length - 1} must appear in exactly one group` : '',
     useVULIdx ? `- vul: every index 0–${vulWords!.length - 1} must appear in exactly one group` : '',
   ].filter(Boolean).join('\n');
 
-  return `You are a biblical textual critic producing a word-alignment map for a scholar comparing three manuscript traditions (MT, LXX, Vulgate).
+  const spSection = spWords === null ? '' : spWords.length
+    ? `SAMARITAN PENTATEUCH — Text-Fabric SP 7.3.0, manuscript transcription in unpointed square Hebrew. Independent source word order and lexical glosses.\n${spWords.length} words:\n${spWords.map((w, i) => `  [${i}] orig="${w.orig}" eng="${w.eng}"`).join('\n')}`
+    : 'SAMARITAN PENTATEUCH: no separate entry at this reference in the source. Use sp:null in every group; do not invent or borrow text.';
+
+  return `You are a biblical textual critic producing a word-alignment map for a scholar comparing MT, LXX, Vulgate${spWords !== null ? ', and Samaritan Pentateuch (sp)' : ''}.
 
 CRITICAL PRINCIPLE: Word order within each tradition is sacred and must never be changed. Your only job is to record WHICH words correspond across traditions — not to sort or reorder anything.
 
@@ -75,12 +83,15 @@ ${lxxSection}
 
 ${vulSection}
 
+${spSection}
+
 ══════════════════════════════════════
 ALIGNMENT TASK
 ══════════════════════════════════════
 Produce an ALIGNMENT MAP — a list of semantic groups. Each group records which word from each tradition expresses the same underlying concept.
 
 For each group:
+- sp: which Samaritan index (integer or null); null when no corresponding Samaritan token is supplied
 - ${useMTIdx ? 'mt: which MT index (integer or null)' : 'mt: {orig, eng} or null'}
 - ${useLXXIdx ? 'lxx: which LXX index (integer or null)' : 'lxx: {orig, eng} or null'}
 - ${useVULIdx ? 'vul: which VUL index (integer or null)' : 'vul: {orig, eng} or null'}
@@ -88,6 +99,7 @@ For each group:
 Order groups by MT word order when possible (null-MT groups may be inserted at the nearest semantic position).
 
 SEMANTIC ALIGNMENT — meaning-based, NOT position-based:
+- Samaritan Hebrew is an independent witness. Match spelling variants by meaning; preserve genuine differing readings and expansions. An SP-only addition may have mt:null, lxx:null, vul:null. Never force a link just to make column rows line up.
 - Greek and Latin have free word order. A Latin word at the end may translate the first Hebrew word.
 - Ask for each Greek word: "Which Hebrew word does this translate?" Link them in the same group.
 - Ask for each Latin word: "Which Hebrew word does this translate?" Link them in the same group.
@@ -105,7 +117,7 @@ TRADITION RELATIONSHIPS (scholarly context):
 - Vulgate (c. 400 CE) generally follows the Hebrew closely but may use interpretive equivalents.
 
 Respond with ONLY valid JSON, no markdown fences:
-{"ref":"verse reference","title":"key Hebrew phrase in pointed Hebrew","subtitle":"English description","groups":[{"lxx":0,"mt":null,"vul":null},{"lxx":1,"mt":0,"vul":0}]}
+{"ref":"verse reference","title":"key Hebrew phrase in pointed Hebrew","subtitle":"English description","groups":[{"sp":null,"lxx":0,"mt":null,"vul":null},{"sp":0,"lxx":1,"mt":0,"vul":0}]}
 
 RULES (non-negotiable):
 - ONE WORD PER GROUP. Every particle, article, conjunction gets its own group.
@@ -121,11 +133,11 @@ RULES (non-negotiable):
 export function buildVerifyPrompt(ref: string, groups: unknown[], traditions: unknown): string {
   return `You are a biblical language expert reviewing a word-alignment map for ${ref}.
 
-IMPORTANT: Do NOT suggest changes to MT, LXX, or Vulgate English glosses — those come from authoritative lexical databases. Only flag: (1) wrong-group alignment (semantically different words in the same group), (2) DSS readings that clearly disagree with the attested manuscript text.
+IMPORTANT: Do NOT suggest changes to source texts or lexical glosses. SP is an independent Samaritan witness; its differences from MT are not errors. Only flag wrong-group alignment (semantically different words in the same group).
 
 Check two things only:
-1. Groups align semantically — the MT, LXX, and Vulgate entries in the same group translate the same underlying concept. Flag groups where semantically different words are linked.
-2. DSS entries marked "extant" actually agree with the MT text shown.
+1. Groups align semantically — the SP, MT, LXX, and Vulgate entries in the same group express corresponding concepts. Flag groups where unrelated words are linked.
+2. Genuine additions can have null correspondences. Do not treat differences from MT as transcription errors in SP or DSS.
 
 Alignment data to review:
 ${JSON.stringify({ ref, groups, traditions })}
@@ -155,9 +167,10 @@ ${JSON.stringify(groups, null, 2)}
 
 Rules:
 - Return ONLY valid JSON, no markdown.
-- Preserve this shape: {"groups":[{"mt":0,"lxx":0,"vul":0}]}
+- Preserve this shape: {"groups":[{"sp":0,"mt":0,"lxx":0,"vul":0}]}
 - Use integer indexes or null only.
-- Every mt, lxx, and vul index must appear exactly once.
+- Every supplied sp, mt, lxx, and vul index must appear exactly once. If sp is empty or absent, every sp value must be null.
+- Samaritan additions may have sp indexes with mt:null, lxx:null, vul:null. Never change source text or word order.
 - No duplicate indexes.
 - No out-of-bounds indexes.
 - If a Greek or Latin token has no Hebrew equivalent, use mt:null.

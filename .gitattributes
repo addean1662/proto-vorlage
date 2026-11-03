@@ -1,0 +1,3 @@
+# Preserve upstream feature bytes so the Samaritan import hashes are reproducible.
+data/samaritan/source/* text eol=lf
+data/samaritan/*.json text eol=lf

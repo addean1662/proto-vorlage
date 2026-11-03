@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { RawMessageStreamEvent } from '@anthropic-ai/sdk/resources/messages/messages';
 import OpenAI from 'openai';
-import { buildPrompt, buildRepairPrompt, buildVerifyPrompt, type LXXWordEntry, type MTWordEntry, type VulWordEntry } from './prompts';
+import { buildPrompt, buildRepairPrompt, buildVerifyPrompt, type LXXWordEntry, type MTWordEntry, type VulWordEntry, type SPWordEntry } from './prompts';
 
 type AlignmentProvider = 'anthropic' | 'openai';
 
@@ -179,8 +179,9 @@ export async function alignWithClaude(
   mtWords: MTWordEntry[] | null = null,
   lxxWords: LXXWordEntry[] | null = null,
   vulWords: VulWordEntry[] | null = null,
+  spWords: SPWordEntry[] | null = null,
 ): Promise<unknown> {
-  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
+  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
   const textContent = await createModelText(prompt, 16000);
 
   if (process.env.NODE_ENV !== 'production') {
@@ -203,15 +204,16 @@ export async function alignWithClaudeStream(
   mtWords: MTWordEntry[] | null = null,
   lxxWords: LXXWordEntry[] | null = null,
   vulWords: VulWordEntry[] | null = null,
+  spWords: SPWordEntry[] | null = null,
 ): Promise<unknown> {
   if (getAlignmentProvider() === 'openai') {
-    const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
+    const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
     const d = data as { ref: string; title: string; subtitle: string };
     onMeta({ ref: d.ref, title: d.title, subtitle: d.subtitle });
     return data;
   }
 
-  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
+  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
   let rawStream: AsyncIterable<RawMessageStreamEvent>;
 
   try {
@@ -223,7 +225,7 @@ export async function alignWithClaudeStream(
     });
   } catch (err) {
     console.warn('Streaming create failed, falling back to non-streaming:', err);
-    const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords);
+    const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
     const d = data as { ref: string; title: string; subtitle: string };
     onMeta({ ref: d.ref, title: d.title, subtitle: d.subtitle });
     return data;

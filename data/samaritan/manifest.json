@@ -1,0 +1,44 @@
+{
+  "dataset": "Text-Fabric Dataset of the Samaritan Pentateuch",
+  "version": "7.3.0",
+  "revision": "8842267d29e37bf786b95209c76852461c389144",
+  "sourceUrl": "https://github.com/DT-UCPH/sp/tree/8842267d29e37bf786b95209c76852461c389144",
+  "citation": "Christian Canu Højgaard, Martijn Naaijer, and Stefan Schorch. Text-Fabric Dataset of the Samaritan Pentateuch. https://doi.org/10.5281/zenodo.7734632",
+  "license": "CC BY-NC 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "manuscripts": "MS Dublin Chester Beatty Library 751 (Genesis 1–Deuteronomy 32:36a); MS Garizim 1 (Deuteronomy 32:36b–34)",
+  "transformations": "Join morphemes according to source trailer boundaries; normalize Hebrew presentation forms to unpointed square Hebrew; join source morpheme glosses with middle dots. JSON keys preserve source verse numbering.",
+  "morphemes": 114891,
+  "counts": {
+    "Genesis": {
+      "verses": 1533,
+      "words": 20866
+    },
+    "Exodus": {
+      "verses": 1203,
+      "words": 17842
+    },
+    "Leviticus": {
+      "verses": 859,
+      "words": 12043
+    },
+    "Numbers": {
+      "verses": 1289,
+      "words": 17087
+    },
+    "Deuteronomy": {
+      "verses": 957,
+      "words": 14497
+    }
+  },
+  "sha256": {
+    "otype.tf": "ea66d31e86552a684d5999675d98ec72b4edcfb013754468c156dff4751a5d19",
+    "oslots.tf": "1e13249acdcb3b34c91341659df043236ff4a63144dab4a42d1ddc1ce4dc01b8",
+    "book.tf": "14e4cc143d9d23f2b743f742ff102e97c890ceaf9e0e23d347c07358fac58095",
+    "chapter.tf": "ab924140edf2b64f018c215c7ee45c35bc30ee27440953fa683c8ad62109c166",
+    "verse.tf": "0e35522ca99700e442f96ad30e813680436e772254a99b8e53b4bbc2172d84a2",
+    "g_cons_utf8.tf": "44be021d5b39d493846801fc65666c1775bb0948d3401cdb320e1fad6f748aab",
+    "gloss.tf": "f9208d5eed7a392acbb51e58810c260b09ef1674a05f4754d71ce7ae196ee8e4",
+    "trailer.tf": "ec70864c8c32471da2483bc42370b54c844ef2b62b727b04cc82d0693f01f55f"
+  }
+}

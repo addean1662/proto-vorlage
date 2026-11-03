@@ -1,6 +1,6 @@
 export type ReviewStatus = 'generated' | 'reviewed' | 'corrected';
 
-export type TraditionKey = 'dss' | 'lxx' | 'mt' | 'vul';
+export type TraditionKey = 'sp' | 'dss' | 'lxx' | 'mt' | 'vul';
 
 export interface TraditionProvenance {
   tradition: TraditionKey;
@@ -36,6 +36,15 @@ export function createVerseProvenance(review?: VerseReviewMeta): VerseProvenance
     alignmentModel: ALIGNMENT_MODEL,
     review: review ?? { status: 'generated' },
     traditions: {
+      sp: {
+        tradition: 'sp',
+        sourceEdition: 'Samaritanus transcription: Chester Beatty 751 and Garizim 1; Text-Fabric SP 7.3.0',
+        dataSource: 'DT-UCPH/sp, revision 8842267d29e37bf786b95209c76852461c389144; CC BY-NC 4.0',
+        lexicalSource: 'Text-Fabric SP morpheme glosses, joined at source word boundaries',
+        evidenceType: 'manuscript',
+        alignmentRole: 'generated-correspondence',
+        note: 'Unpointed square Hebrew in independent source order. Glosses are lexical aids, not a translation. Hover correspondence is generated; Samaritan additions remain in the text.',
+      },
       dss: {
         tradition: 'dss',
         sourceEdition: 'Dead Sea Scroll biblical witnesses from project coverage tables and variant files',

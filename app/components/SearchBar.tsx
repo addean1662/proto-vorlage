@@ -43,7 +43,7 @@ export default function SearchBar({
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="e.g. Genesis 1:1 or Bereishit 1:1"
           disabled={blocked}
-          className="flex-1 px-4 py-2.5 rounded-lg outline-none"
+          className="min-w-0 flex-1 px-4 py-2.5 rounded-lg outline-none"
           style={{
             fontSize: 18,
             backgroundColor: 'rgba(212,196,168,0.07)',

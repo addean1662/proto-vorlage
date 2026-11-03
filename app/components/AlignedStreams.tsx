@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { transliterateHebrew, transliterateGreek } from '@/lib/transliterate';
 import { DSS_FRAG_DATES } from '@/lib/dss-dates';
+import Link from 'next/link';
 
 type WordEntry = {
   orig: string;
@@ -23,13 +24,14 @@ type DSSEntry = {
 };
 
 type Traditions = {
+  sp: WordEntry[];
   dss: DSSEntry[];
   lxx: WordEntry[];
   mt: WordEntry[];
   vul: WordEntry[];
 };
 
-type AlignmentGroup = { lxx: number | null; mt: number | null; vul: number | null; };
+type AlignmentGroup = { sp?: number | null; lxx: number | null; mt: number | null; vul: number | null; };
 
 type Provenance = {
   generatedAt?: string;
@@ -45,9 +47,11 @@ interface AlignedStreamsProps {
   groups: AlignmentGroup[];
   provenance?: Provenance;
   loadingAlignment?: boolean;
+  sourceNotes?: { sp?: string };
 }
 
 const COLS = [
+  { key: 'sp' as const, label: 'Samaritan Pentateuch', color: '#b6a0d4', isHebrew: true, date: 'Chester Beatty 751 / Garizim 1', glossSource: 'Text-Fabric SP' },
   { key: 'dss' as const, label: 'Dead Sea Scrolls', color: '#c4a882', isHebrew: true,  date: 'c. 250 BCE–68 CE',  glossSource: 'Brown-Driver-Briggs' },
   { key: 'lxx' as const, label: 'Septuagint',       color: '#7ea8be', isHebrew: false, date: 'c. 280–150 BCE',    glossSource: 'TBESG' },
   { key: 'vul' as const, label: 'Vulgate',           color: '#a8b896', isHebrew: false, date: 'c. 382–405 CE',    glossSource: "Whitaker's Words" },
@@ -55,6 +59,7 @@ const COLS = [
 ] as const;
 
 const SOURCE_NOTES = {
+  sp: 'Samaritan manuscript text in unpointed square Hebrew; source order and lexical glosses from Text-Fabric SP 7.3.0 (CC BY-NC 4.0). Independent additions are preserved. Hover correspondences are generated.',
   dss: 'DSS cells show manuscript preservation status. Extant readings are manuscript evidence; lost cells mean no preserved word is available for that MT position.',
   lxx: 'LXX tokens are source-order Greek data. Alignment to Hebrew is generated and should be checked before citation.',
   vul: 'Vulgate tokens are source-order Latin data. Alignment to Hebrew is generated and may reflect interpretive translation choices.',
@@ -161,6 +166,7 @@ function WordChip({
   groupId,
   hoveredGroup,
   onHover,
+  tradition,
   frag,
   status,
   paleo,
@@ -176,6 +182,7 @@ function WordChip({
   groupId: number | null;
   hoveredGroup: number | null;
   onHover: (g: number | null) => void;
+  tradition: string;
   frag?: string | null;
   status?: DSSEntry['status'];
   paleo?: boolean;
@@ -225,6 +232,13 @@ function WordChip({
 
   return (
     <div
+      data-tradition={tradition}
+      data-alignment-group={groupId ?? undefined}
+      data-highlighted={highlighted ? 'true' : 'false'}
+      tabIndex={isDash ? undefined : 0}
+      aria-label={`${orig}: ${eng}`}
+      onFocus={() => onHover(groupId)}
+      onBlur={() => onHover(null)}
       onMouseEnter={() => onHover(groupId)}
       onMouseLeave={() => onHover(null)}
       style={{
@@ -320,26 +334,30 @@ export default function AlignedStreams({
   groups,
   provenance,
   loadingAlignment,
+  sourceNotes,
 }: AlignedStreamsProps) {
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
 
   // Pre-compute group ID for each word in each tradition
   const groupByIdx = useMemo(() => {
+    const sp = new Map<number, number>();
     const dss = new Map<number, number>();
     const lxx = new Map<number, number>();
     const mt  = new Map<number, number>();
     const vul = new Map<number, number>();
 
     groups.forEach((g, gid) => {
+      if (g.sp != null) sp.set(g.sp, gid);
       if (g.lxx !== null) lxx.set(g.lxx, gid);
       if (g.mt  !== null) { mt.set(g.mt, gid); dss.set(g.mt, gid); }
       if (g.vul !== null) vul.set(g.vul, gid);
     });
 
-    return { dss, lxx, mt, vul };
+    return { sp, dss, lxx, mt, vul };
   }, [groups]);
 
   const colWords = {
+    sp: traditions.sp,
     dss: traditions.dss,
     lxx: traditions.lxx,
     mt:  traditions.mt,
@@ -378,10 +396,11 @@ export default function AlignedStreams({
         provenance={provenance}
       />
 
-      {/* Four independent word streams */}
+      {/* Five independent word streams. Horizontal scrolling keeps mobile text readable. */}
+      <div role="region" aria-label="Textual tradition comparison" tabIndex={0} style={{ overflowX: 'auto', maxWidth: '100%' }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(5, minmax(230px, 1fr))',
         borderRadius: 8,
         overflow: 'hidden',
         border: '1px solid rgba(200,170,120,.1)',
@@ -390,6 +409,7 @@ export default function AlignedStreams({
         {COLS.map((col, ci) => (
           <div
             key={col.key}
+            data-tradition-header={col.key}
             style={{
               padding: '10px 12px',
               background: '#0f0d0a',
@@ -406,6 +426,7 @@ export default function AlignedStreams({
               <HoverTooltip content={SOURCE_NOTES[col.key]}>
                 <div style={{ fontSize: 10, color: 'rgba(200,180,150,.35)', marginTop: 4, textDecoration: 'underline dotted rgba(200,180,150,.25)', cursor: 'help' }}>source note</div>
               </HoverTooltip>
+              {col.key === 'sp' && <Link href="/samaritan-pentateuch" style={{ fontSize: 10, color: col.color, marginTop: 4 }}>Edition &amp; attribution</Link>}
             </div>
             {/* Right half — left-aligned, mirrors gloss column */}
             <div style={{ flex: '1 1 50%', paddingLeft: 10, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -426,6 +447,9 @@ export default function AlignedStreams({
                 background: '#0f0d0a',
               }}
             >
+              {col.key === 'sp' && sourceNotes?.sp && (
+                <p style={{ padding: 12, fontSize: 13, color: col.color, lineHeight: 1.6 }}>{sourceNotes.sp}</p>
+              )}
               {words.map((word, idx) => {
                 const groupId = groupByIdx[col.key].get(idx) ?? null;
                 const w = word as WordEntry & Partial<DSSEntry>;
@@ -433,6 +457,7 @@ export default function AlignedStreams({
                 return (
                   <WordChip
                     key={idx}
+                    tradition={col.key}
                     orig={w.orig}
                     eng={w.eng}
                     xlit={w.xlit}
@@ -453,6 +478,7 @@ export default function AlignedStreams({
             </div>
           );
         })}
+      </div>
       </div>
 
       {!loadingAlignment && groups.length === 0 && (

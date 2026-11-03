@@ -10,6 +10,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createVerseProvenance, type VerseProvenance } from '@/lib/provenance';
 import { validateAlignment, type AlignmentValidationReport } from '@/lib/alignment-validator';
+import { getSamaritanVerse } from '@/lib/samaritan';
 
 export const maxDuration = 300;
 
@@ -34,15 +35,17 @@ type DSSEntry = {
 };
 
 type Traditions = {
+  sp: WordEntry[];
   dss: DSSEntry[];   // one entry per MT word position (indexed with MT)
   lxx: WordEntry[];  // in LXX source order
   mt: WordEntry[];   // in MT source order
   vul: WordEntry[];  // in VUL source order
 };
 
-type AlignmentGroup = { lxx: number | null; mt: number | null; vul: number | null; };
+type AlignmentGroup = { sp: number | null; lxx: number | null; mt: number | null; vul: number | null; };
 
 type NewVerseData = {
+  sourceNotes?: { sp?: string };
   ref: string;
   title: string;
   subtitle: string;
@@ -172,8 +175,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       // 1. Cache hit
       const cached = await getCachedVerse(key);
       if (cached) {
-        const cachedData = cached as { provenance?: unknown; validation?: AlignmentValidationReport };
-        if (cachedData.provenance && cachedData.validation?.valid === true) {
+        const cachedData = cached as Partial<NewVerseData>;
+        if (cachedData.provenance?.traditions?.sp && Array.isArray(cachedData.traditions?.sp) && cachedData.validation?.valid === true && validateAlignment(cachedData).valid) {
           logger.info('lookup_stream_cache_hit', { ref: canonical });
           emit('cached', { data: cached, fromCache: true });
           close();
@@ -191,6 +194,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       // 3. Fetch source texts
+      const samaritan = getSamaritanVerse(canonical);
+      emit('source_preview', { source: 'sp', text: samaritan.words.map(w => w.orig).join(' ') || samaritan.note });
       emit('phase', { text: 'Fetching Masoretic Text…' });
       let mt: string, lxx: string, vul: string;
       try {
@@ -230,26 +235,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       const prebuiltDSS = getDSSWords(canonical);
       const dssVariants = getDSSVariants(canonical);
 
-      // If local word lists aren't available, fall back to old row-based format
+      // Only source-backed token lists may be aligned; never generate replacement texts.
       if (!mtWords || !lxxWords || !vulWords) {
-        emit('phase', { text: 'Aligning traditions…' });
-        // Legacy path: let Claude provide full word objects
-        let aligned: unknown;
-        try {
-          aligned = await alignWithClaudeStream(
-            canonical, mt!, lxx!, vul!,
-            (meta: StreamMeta) => emit('meta', meta),
-          );
-        } catch (err) {
-          const status = (err as { status?: number })?.status;
-          logger.error('lookup_stream_alignment_failed', { ref: canonical, status, message: (err as Error).message });
-          emit('error', { message: status === 429 ? 'rate_limited' : `Claude alignment failed: ${(err as Error).message}` });
-          close(); return;
-        }
-        logger.warn('lookup_stream_legacy_alignment_not_cached', { ref: canonical });
-        emit('done', { data: aligned, fromCache: false, cacheStored: false });
-        close();
-        return;
+        throw new Error(`Source word lists are unavailable for ${canonical}. Please check the verse reference.`);
       }
 
       const mtDisplay  = assembleMT(mtWords);
@@ -258,13 +246,15 @@ export async function POST(request: NextRequest): Promise<Response> {
       const dssDisplay = assembleDSS(mtWords.length, prebuiltDSS, dssVariants, book);
 
       const traditions: Traditions = {
+        sp: samaritan.words,
         dss: dssDisplay,
         lxx: lxxDisplay,
         mt:  mtDisplay,
         vul: vulDisplay,
       };
 
-      emit('traditions', { traditions });
+      const sourceNotes = samaritan.note ? { sp: samaritan.note } : undefined;
+      emit('traditions', { traditions, sourceNotes });
 
       // 5. Stream Claude alignment (for connection keepalive; groups arrive at end)
       emit('phase', { text: 'Aligning traditions and searching Dead Sea Scrolls…' });
@@ -275,7 +265,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         aligned = await alignWithClaudeStream(
           canonical, mt!, lxx!, vul!,
           (meta: StreamMeta) => { streamMeta = meta; emit('meta', meta); },
-          mtWords, lxxWords, vulWords,
+          mtWords, lxxWords, vulWords, samaritan.words,
         );
       } catch (err) {
         const status = (err as { status?: number })?.status;
@@ -303,6 +293,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         repairAttempts.push({ attempt, errors: validation.errors });
         try {
           groups = await repairAlignmentGroups(canonical, groups, {
+            sp: samaritan.words,
             mt: mtDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
             lxx: lxxDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
             vul: vulDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
@@ -316,6 +307,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       // 6. Verification (non-fatal)
       const verification = await verifyAlignment(canonical, groups, {
+        sp: samaritan.words,
         mt: mtDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
         lxx: lxxDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
         vul: vulDisplay.map(w => ({ orig: w.orig, eng: w.eng })),
@@ -327,6 +319,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       // 7. Cache and done
       const finalData: NewVerseData = {
+        sourceNotes,
         ref: alignedData.ref,
         title: alignedData.title,
         subtitle: alignedData.subtitle,
@@ -337,7 +330,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       };
 
       const cacheStored = finalData.validation.valid ? await cacheVerse(key, finalData) : false;
-      if (cacheStored) {
+      if (cacheStored && !cached) {
         await incrementCachedCount();
       }
       logger.info('lookup_stream_completed', {
@@ -354,6 +347,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         fromCache: false,
         cacheStored,
         corrections,
+        cacheAdded: cacheStored && !cached,
         validation: finalData.validation,
         repairAttempts,
         verificationSkipped: verification.skipped ?? false,
