@@ -1,6 +1,7 @@
-export type TraditionKey = 'mt' | 'lxx' | 'vul';
+export type TraditionKey = 'mt' | 'lxx' | 'vul' | 'sp';
 
 export interface AlignmentGroup {
+  sp?: number | null;
   mt: number | null;
   lxx: number | null;
   vul: number | null;
@@ -13,6 +14,7 @@ export interface TraditionWord {
 }
 
 export interface AlignmentTraditions {
+  sp?: TraditionWord[];
   dss?: TraditionWord[];
   mt: TraditionWord[];
   lxx: TraditionWord[];
@@ -71,8 +73,10 @@ export function validateAlignment(input: ValidationInput, options: { requireProv
   const issues: ValidationIssue[] = [];
   const traditions = input.traditions;
   const groups = input.groups ?? [];
+  const keys: TraditionKey[] = traditions?.sp ? ['mt', 'lxx', 'vul', 'sp'] : ['mt', 'lxx', 'vul'];
 
   const counts: Record<TraditionKey, number> = {
+    sp: traditions?.sp?.length ?? 0,
     mt: traditions?.mt?.length ?? 0,
     lxx: traditions?.lxx?.length ?? 0,
     vul: traditions?.vul?.length ?? 0,
@@ -115,13 +119,14 @@ export function validateAlignment(input: ValidationInput, options: { requireProv
   }
 
   const seen: Record<TraditionKey, Map<number, number[]>> = {
+    sp: new Map(),
     mt: new Map(),
     lxx: new Map(),
     vul: new Map(),
   };
 
   groups.forEach((group, groupIndex) => {
-    const values = [group.mt, group.lxx, group.vul];
+    const values = keys.map(key => group[key]);
     if (values.every(value => value === null || value === undefined)) {
       issues.push({
         code: 'empty_group',
@@ -131,7 +136,7 @@ export function validateAlignment(input: ValidationInput, options: { requireProv
       });
     }
 
-    for (const key of ['mt', 'lxx', 'vul'] as const) {
+    for (const key of keys) {
       const value = group[key];
       if (value === null || value === undefined) continue;
 
@@ -154,12 +159,13 @@ export function validateAlignment(input: ValidationInput, options: { requireProv
   });
 
   const coverage = {
+    sp: createCoverage(counts.sp),
     mt: createCoverage(counts.mt),
     lxx: createCoverage(counts.lxx),
     vul: createCoverage(counts.vul),
   };
 
-  for (const key of ['mt', 'lxx', 'vul'] as const) {
+  for (const key of keys) {
     for (let index = 0; index < counts[key]; index += 1) {
       const groupsForIndex = seen[key].get(index) ?? [];
       if (groupsForIndex.length === 0) {

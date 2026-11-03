@@ -1,6 +1,14 @@
 # Proto-Vorlage
 
-Proto-Vorlage is a Torah textual-tradition alignment tool. It compares generated word-level alignments across Dead Sea Scroll witnesses, Septuagint, Vulgate, and the Masoretic Text, with provenance metadata and cache review controls for editorial follow-up.
+Proto-Vorlage is a Torah textual-tradition comparison tool. It displays Samaritan Pentateuch, Dead Sea Scroll witnesses, Septuagint, Vulgate, and Masoretic Text in that left-to-right order. Each tradition retains its source word order; generated word correspondences drive cross-column hover highlighting.
+
+## Samaritan Pentateuch
+
+Text and lexical glosses come from [DT-UCPH/sp 7.3.0](https://github.com/DT-UCPH/sp/tree/8842267d29e37bf786b95209c76852461c389144), pinned to the revision recorded in `data/samaritan/manifest.json`. Data is **CC BY-NC 4.0**; retain attribution and noncommercial use terms (see `data/samaritan/LICENSE.txt`). Source feature files and hashes are included for reproducibility. Run `npm run build:samaritan` to rebuild book JSON from those files.
+
+The importer joins morphemes by source word boundaries and normalizes Hebrew presentation forms. It preserves source numbering: 5,841 entries, with Exodus 30:1–10 located within 26:35 and Deuteronomy 34:2–3 represented by the description at 34:1. The API returns explicit location notes for those twelve references. Text is never substituted from MT. The public `/samaritan-pentateuch` page supplies full attribution and edition details.
+
+Legacy four-tradition cache entries are regenerated on request. No cache is bulk-deleted. Both lookup endpoints share the validated five-tradition pipeline; adding SP does not increment the verse count when replacing an existing entry.
 
 Live site: https://www.protovorlage.com
 

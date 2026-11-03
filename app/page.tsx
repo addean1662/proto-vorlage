@@ -17,9 +17,9 @@ interface VerseRow { mt: WordEntry; lxx: WordEntry; vul: WordEntry; dss: DSSEntr
 interface OldVerseData { ref: string; title: string; subtitle: string; rows: VerseRow[]; }
 
 // New (source-order) format
-interface Traditions { dss: DSSEntry[]; lxx: WordEntry[]; mt: WordEntry[]; vul: WordEntry[]; }
-interface AlignmentGroup { lxx: number | null; mt: number | null; vul: number | null; }
-interface NewVerseData { ref: string; title: string; subtitle: string; traditions: Traditions; groups: AlignmentGroup[]; provenance?: { generatedAt?: string; alignmentModel?: string; review?: { status?: string; reviewedAt?: string; reviewer?: string; note?: string } }; }
+interface Traditions { sp: WordEntry[]; dss: DSSEntry[]; lxx: WordEntry[]; mt: WordEntry[]; vul: WordEntry[]; }
+interface AlignmentGroup { sp?: number | null; lxx: number | null; mt: number | null; vul: number | null; }
+interface NewVerseData { ref: string; title: string; subtitle: string; traditions: Traditions; groups: AlignmentGroup[]; sourceNotes?: { sp?: string }; provenance?: { generatedAt?: string; alignmentModel?: string; review?: { status?: string; reviewedAt?: string; reviewer?: string; note?: string } }; }
 
 type VerseData = OldVerseData | NewVerseData;
 function isNewFormat(d: VerseData): d is NewVerseData { return 'traditions' in d; }
@@ -45,6 +45,7 @@ function parseSSEBuffer(buffer: string): { events: Array<{ event: string; data: 
 
 // ── Source label helpers ──────────────────────────────────────────────────────
 const SOURCE_LABELS: Record<string, { label: string; color: string; font: string }> = {
+  sp: { label: 'Samaritan Pentateuch', color: '#b6a0d4', font: "'SBL Hebrew','Ezra SIL','Times New Roman',serif" },
   mt:  { label: 'Masoretic Text', color: '#d4a574', font: "'SBL Hebrew','Ezra SIL','Times New Roman',serif" },
   lxx: { label: 'Septuagint',     color: '#7ea8be', font: "var(--font-garamond),'EB Garamond',serif" },
   vul: { label: 'Vulgate',        color: '#a8b896', font: "var(--font-garamond),'EB Garamond',serif" },
@@ -211,8 +212,9 @@ export default function Home() {
           if (event === 'traditions') {
             setDisplayData(prev => {
               const base = { ref: trimmed, title: '', subtitle: '', groups: [] };
-              if (prev && isNewFormat(prev)) return { ...prev, traditions: d.traditions as Traditions };
-              return { ...base, traditions: d.traditions as Traditions };
+              const sourceNotes = d.sourceNotes as NewVerseData['sourceNotes'];
+              if (prev && isNewFormat(prev)) return { ...prev, traditions: d.traditions as Traditions, sourceNotes };
+              return { ...base, traditions: d.traditions as Traditions, sourceNotes };
             });
             setAlignmentLoading(true);
           }
@@ -244,7 +246,7 @@ export default function Home() {
             setCacheStored(d.cacheStored === true);
             setIsComplete(true);
             addToHistory(finalData.ref);
-            setCachedCount(prev => (prev !== null ? prev + 1 : 1));
+            if (d.cacheAdded === true) setCachedCount(prev => (prev !== null ? prev + 1 : 1));
             startCooldown();
             setLoading(false);
             if (elapsedIntervalRef.current) { clearInterval(elapsedIntervalRef.current); elapsedIntervalRef.current = null; }
@@ -287,7 +289,10 @@ export default function Home() {
             <p style={{ fontSize: 13, color: 'rgba(200,180,150,.6)', fontStyle: 'italic', margin: '2px 0 0' }}>
               Genesis · Exodus · Leviticus · Numbers · Deuteronomy
             </p>
-            <div style={{ marginTop: 10, display: 'flex', gap: 18 }}>
+            <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 18 }}>
+              <Link href="/samaritan-pentateuch" style={{ fontSize: 11, color: '#b6a0d4', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                Samaritan Pentateuch →
+              </Link>
               <Link href="/dss-fragments" style={{ fontSize: 11, color: 'rgba(200,180,150,.4)', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'rgba(200,180,150,.75)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(200,180,150,.4)')}>
@@ -352,12 +357,12 @@ export default function Home() {
           <div style={{ maxWidth: 620, margin: '20px auto 36px', padding: '28px 32px', background: 'rgba(200,170,120,.03)', border: '1px solid rgba(200,170,120,.1)', borderRadius: 8, textAlign: 'center' }}>
             <div style={{ width: 28, height: 28, margin: '0 auto 18px', border: '2px solid rgba(200,170,120,.12)', borderTop: '2px solid rgba(200,170,120,.5)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             <p style={{ margin: '0 0 16px', fontSize: 15, color: 'rgba(200,180,150,.75)', fontFamily: "var(--font-garamond),'EB Garamond',serif", lineHeight: 1.6 }}>
-              Retrieving this verse from the Masoretic Text, Septuagint, and Vulgate —
+              Retrieving this verse from the Samaritan Pentateuch, Masoretic Text, Septuagint, and Vulgate —
               then searching the Dead Sea Scrolls for manuscript evidence.
             </p>
             <p style={{ margin: '0 0 20px', fontSize: 13, color: 'rgba(200,180,150,.38)', fontStyle: 'italic', lineHeight: 1.7 }}>
-              The AI reads each tradition, maps every Hebrew word to its Greek and Latin translation
-              equivalent, checks which scroll fragments cover this verse, and looks up any textual variants.
+              Each tradition keeps its own word order. Hovering over a word highlights its generated
+              correspondences across the other traditions. DSS evidence comes from the project’s coverage data.
               This typically takes about a minute.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
@@ -386,7 +391,7 @@ export default function Home() {
                   <div style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(200,180,150,.4)', marginBottom: 5 }}>
                     {meta?.label}
                   </div>
-                  <div style={{ fontSize: 14, color: meta?.color ?? '#d4c4a8', fontFamily: meta?.font, lineHeight: 1.6, direction: source === 'mt' ? 'rtl' : 'ltr' }}>
+                  <div style={{ fontSize: 14, color: meta?.color ?? '#d4c4a8', fontFamily: meta?.font, lineHeight: 1.6, direction: source === 'mt' || source === 'sp' ? 'rtl' : 'ltr' }}>
                     {text}
                   </div>
                 </div>
@@ -425,6 +430,7 @@ export default function Home() {
                   ref={displayData.ref || lastRef}
                   title={displayData.title}
                   subtitle={displayData.subtitle}
+                  sourceNotes={displayData.sourceNotes}
                   traditions={displayData.traditions}
                   groups={displayData.groups}
                   provenance={displayData.provenance}
@@ -483,7 +489,7 @@ export default function Home() {
             <div style={{ fontSize: 56, opacity: .12, marginBottom: 16 }}>𐤀</div>
             <p style={{ fontSize: 15, color: 'rgba(200,180,150,.3)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
               Type any Torah verse above. Cached verses load instantly for free.
-              New verses are aligned across all four traditions and stored permanently.
+              Compare all five traditions in their own word order. Hover over a word to highlight its correspondences.
             </p>
           </div>
         )}
@@ -499,6 +505,11 @@ export default function Home() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px 36px' }}>
             {[
+              {
+                color: '#b6a0d4',
+                label: 'Samaritan Pentateuch',
+                text: 'Displays the Samaritan manuscript tradition in unpointed square Hebrew, in its own word order, including expansions and variant readings. Text and lexical glosses: Text-Fabric SP 7.3.0, based on Chester Beatty 751 and Garizim 1. CC BY-NC 4.0; edition and attribution are linked above.',
+              },
               {
                 color: '#c4a882',
                 label: 'Dead Sea Scrolls',
@@ -517,7 +528,7 @@ export default function Home() {
               {
                 color: '#d4a574',
                 label: 'Masoretic Text',
-                text: 'Displays the Westminster Leningrad Codex (the oldest complete Hebrew Bible, 1008/1009 CE) word-by-word with BDB lexical glosses, representing the standardized rabbinic text that became the basis of all modern Old Testament translations and the anchor column against which the three older traditions are compared.',
+                text: 'Displays the Westminster Leningrad Codex (1008/1009 CE) word-by-word with BDB lexical glosses, providing the anchor sequence for generated correspondences with the other four traditions.',
               },
             ].map(({ color, label, text }) => (
               <div key={label}>

@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       'lib/*_dss_coverage.json',
       // Build scripts
       'scripts/**',
+      'data/samaritan/source/**',
     ],
   },
 };

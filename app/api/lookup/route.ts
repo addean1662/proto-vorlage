@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { isTorahBook, normalizeRef, canonicalizeRef } from '@/lib/torah';
-import { getCachedVerse, cacheVerse, getCachedCount, incrementCachedCount, clearCachedVerse, clearAllCached, isRedisConfigured } from '@/lib/cache';
-import { fetchMasoretText, fetchSeptuagint, fetchVulgate } from '@/lib/sources';
-import { alignWithClaude } from '@/lib/claude';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { normalizeRef, canonicalizeRef } from '@/lib/torah';
+import { getCachedCount, clearCachedVerse, clearAllCached, isRedisConfigured } from '@/lib/cache';
+import { POST as streamLookup } from './stream/route';
+
+export const maxDuration = 300;
 import { logger } from '@/lib/logger';
 
 function isAuthorizedAdmin(request: NextRequest): boolean {
@@ -50,80 +50,20 @@ export async function DELETE(request: NextRequest) {
   return Response.json({ cleared });
 }
 
+/** JSON clients use the same source-backed, validated pipeline as the streaming UI. */
 export async function POST(request: NextRequest) {
-  let body: { ref?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const { ref } = body;
-
-  if (!ref || typeof ref !== 'string') {
-    return Response.json({ error: 'Missing verse reference' }, { status: 400 });
-  }
-
-  const canonical = canonicalizeRef(ref.trim());
-  if (!isTorahBook(canonical)) {
-    return Response.json(
-      { error: 'This tool covers the Torah only (Genesis–Deuteronomy).' },
-      { status: 400 }
-    );
-  }
-
-  const key = normalizeRef(canonical);
-
-  // Check cache first
-  const cached = await getCachedVerse(key);
-  if (cached) {
-    logger.info('lookup_cache_hit', { ref: canonical });
-    return Response.json({ data: cached, fromCache: true });
-  }
-
-  // Rate limit only for uncached lookups
-  if (!(await checkRateLimit(request.headers.get('x-forwarded-for')))) {
-    logger.warn('lookup_rate_limited', { ref: canonical });
-    return Response.json(
-      { error: 'Rate limit: 10 new verse lookups per hour.' },
-      { status: 429 }
-    );
-  }
-
-  // Fetch three texts in parallel
-  let mt: string, lxx: string, vul: string;
-  try {
-    [mt, lxx, vul] = await Promise.all([
-      fetchMasoretText(canonical),
-      fetchSeptuagint(canonical),
-      fetchVulgate(canonical),
-    ]);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    logger.error('lookup_source_fetch_failed', { ref: canonical, message });
-    return Response.json({ error: `Failed to fetch source texts: ${message}` }, { status: 502 });
-  }
-
-  // Align with Claude
-  let aligned: unknown;
-  try {
-    aligned = await alignWithClaude(canonical, mt, lxx, vul);
-  } catch (err) {
-    const status = (err as { status?: number })?.status;
-    if (status === 429) {
-      return Response.json({ error: 'rate_limited' }, { status: 429 });
+  const response = await streamLookup(request);
+  if (!response.ok) return response;
+  const body = await response.text();
+  for (const block of body.split('\n\n')) {
+    const event = block.match(/^event: (.+)$/m)?.[1];
+    const raw = block.match(/^data: (.+)$/m)?.[1];
+    if (!raw) continue;
+    const data = JSON.parse(raw);
+    if (event === 'cached' || event === 'done') return Response.json(data);
+    if (event === 'error') {
+      return Response.json({ error: data.message }, { status: data.message === 'rate_limited' ? 429 : 502 });
     }
-    const message = err instanceof Error ? err.message : String(err);
-    logger.error('lookup_alignment_failed', { ref: canonical, status, message });
-    return Response.json({ error: `Claude alignment failed: ${message}` }, { status: 502 });
   }
-
-  // Cache and return
-  const cacheStored = await cacheVerse(key, aligned);
-  if (cacheStored) {
-    await incrementCachedCount();
-  }
-  logger.info('lookup_completed', { ref: canonical, cacheStored });
-
-  return Response.json({ data: aligned, fromCache: false, cacheStored });
+  return Response.json({ error: 'Lookup ended before completion' }, { status: 502 });
 }
