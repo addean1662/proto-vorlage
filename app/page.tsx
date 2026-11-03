@@ -325,7 +325,7 @@ export default function Home() {
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', padding: '0 28px 60px' }}>
-      <div style={{ maxWidth: 1400, width: '100%', margin: '0 auto' }}>
+      <div style={{ maxWidth: 1400, width: '100%', minWidth: 0, margin: '0 auto' }}>
 
         {/* Error */}
         {error && !loading && (
@@ -457,7 +457,7 @@ export default function Home() {
 
               {/* Verse navigation — only after complete */}
               {isComplete && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
                   {prevRef ? navBtn(prevRef, `← ${prevRef}`) : <span />}
                   <span style={{ fontSize: 11, color: 'rgba(200,180,150,.2)', fontStyle: 'italic', userSelect: 'none' }}>← → keys</span>
                   {nextRef ? navBtn(nextRef, `${nextRef} →`) : <span />}
