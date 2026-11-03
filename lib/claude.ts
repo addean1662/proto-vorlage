@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { RawMessageStreamEvent } from '@anthropic-ai/sdk/resources/messages/messages';
 import OpenAI from 'openai';
+import { createAlignmentStreamParser } from './alignment-stream';
+import type { AlignmentGroup } from './alignment-validator';
 import { buildPrompt, buildRepairPrompt, buildVerifyPrompt, type LXXWordEntry, type MTWordEntry, type VulWordEntry, type SPWordEntry } from './prompts';
 
 type AlignmentProvider = 'anthropic' | 'openai';
@@ -140,10 +142,10 @@ function extractJSON(textContent: string): unknown {
  * Try to extract ref/title/subtitle as soon as the "groups":[ marker appears.
  */
 function tryExtractMeta(buffer: string): StreamMeta | null {
-  if (!buffer.includes('"groups":[')) return null;
+  if (!/"groups"\s*:\s*\[/.test(buffer)) return null;
   const get = (field: string): string | null => {
     const m = buffer.match(new RegExp(`"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
-    return m ? m[1] : null;
+    return m ? JSON.parse(`"${m[1]}"`) : null;
   };
   const ref = get('ref');
   const title = get('title');
@@ -192,8 +194,7 @@ export async function alignWithClaude(
 }
 
 /**
- * Streaming alignment for Anthropic. OpenAI currently uses non-streaming generation
- * through the same API surface, then emits metadata once the JSON is parsed.
+ * Stream complete groups from either provider so hover need not wait for the full response.
  */
 export async function alignWithClaudeStream(
   ref: string,
@@ -205,15 +206,37 @@ export async function alignWithClaudeStream(
   lxxWords: LXXWordEntry[] | null = null,
   vulWords: VulWordEntry[] | null = null,
   spWords: SPWordEntry[] | null = null,
+  onGroups: (groups: AlignmentGroup[]) => void = () => {},
 ): Promise<unknown> {
+  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
+  const parseGroups = createAlignmentStreamParser(onGroups);
+  let fullText = '';
+  let metaEmitted = false;
+  const acceptDelta = (text: string) => {
+    fullText += text;
+    if (!metaEmitted) {
+      const meta = tryExtractMeta(fullText);
+      if (meta) { onMeta(meta); metaEmitted = true; }
+    }
+    parseGroups(text);
+  };
+
   if (getAlignmentProvider() === 'openai') {
-    const data = await alignWithClaude(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
+    const stream = await getOpenAIClient().responses.create({
+      model: getOpenAIModel(), input: prompt, max_output_tokens: 16000, stream: true,
+    });
+    for await (const event of stream) {
+      if (event.type === 'response.output_text.delta') acceptDelta(event.delta);
+      if (event.type === 'response.failed') throw new Error(event.response.error?.message ?? 'OpenAI alignment failed.');
+      if (event.type === 'response.incomplete') throw new Error('OpenAI alignment response was incomplete.');
+      if (event.type === 'error') throw new Error(event.message);
+    }
+    const data = extractJSON(fullText);
     const d = data as { ref: string; title: string; subtitle: string };
-    onMeta({ ref: d.ref, title: d.title, subtitle: d.subtitle });
+    if (!metaEmitted) onMeta({ ref: d.ref, title: d.title, subtitle: d.subtitle });
     return data;
   }
 
-  const prompt = buildPrompt(ref, mt, lxx, vul, mtWords, lxxWords, vulWords, spWords);
   let rawStream: AsyncIterable<RawMessageStreamEvent>;
 
   try {
@@ -231,21 +254,13 @@ export async function alignWithClaudeStream(
     return data;
   }
 
-  let fullText = '';
-  let metaEmitted = false;
-
   for await (const event of rawStream) {
     if (
       event.type === 'content_block_delta' &&
       event.delta?.type === 'text_delta' &&
       typeof event.delta.text === 'string'
     ) {
-      fullText += event.delta.text;
-
-      if (!metaEmitted) {
-        const meta = tryExtractMeta(fullText);
-        if (meta) { onMeta(meta); metaEmitted = true; }
-      }
+      acceptDelta(event.delta.text);
     }
   }
 

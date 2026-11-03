@@ -69,7 +69,7 @@ function isValidGroupValue(value: unknown): value is number | null {
   return value === null || Number.isInteger(value);
 }
 
-export function validateAlignment(input: ValidationInput, options: { requireProvenance?: boolean } = {}): AlignmentValidationReport {
+export function validateAlignment(input: ValidationInput, options: { requireProvenance?: boolean; allowPartial?: boolean } = {}): AlignmentValidationReport {
   const issues: ValidationIssue[] = [];
   const traditions = input.traditions;
   const groups = input.groups ?? [];
@@ -170,7 +170,7 @@ export function validateAlignment(input: ValidationInput, options: { requireProv
       const groupsForIndex = seen[key].get(index) ?? [];
       if (groupsForIndex.length === 0) {
         coverage[key].missing.push(index);
-        issues.push({
+        if (!options.allowPartial) issues.push({
           code: 'missing_index',
           severity: 'error',
           tradition: key,

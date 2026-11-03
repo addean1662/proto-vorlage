@@ -80,7 +80,7 @@ function EvidenceStatus({
   provenance?: Provenance;
 }) {
   const statusText = loadingAlignment
-    ? 'AI alignment pending'
+    ? groupCount > 0 ? 'Hover available; more matches are loading…' : 'Matching words for hover…'
     : groupCount > 0
       ? 'AI alignment generated; verify before citation'
       : 'No alignment map available';
@@ -181,7 +181,7 @@ function WordChip({
   isHebrew: boolean;
   groupId: number | null;
   hoveredGroup: number | null;
-  onHover: (g: number | null) => void;
+  onHover: (active: boolean) => void;
   tradition: string;
   frag?: string | null;
   status?: DSSEntry['status'];
@@ -237,10 +237,10 @@ function WordChip({
       data-highlighted={highlighted ? 'true' : 'false'}
       tabIndex={isDash ? undefined : 0}
       aria-label={`${orig}: ${eng}`}
-      onFocus={() => onHover(groupId)}
-      onBlur={() => onHover(null)}
-      onMouseEnter={() => onHover(groupId)}
-      onMouseLeave={() => onHover(null)}
+      onFocus={() => onHover(true)}
+      onBlur={() => onHover(false)}
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -317,11 +317,9 @@ function WordChip({
           )}
         </div>
       </div>
-      {highlighted && groupId !== null && (
-        <div style={{ fontSize: 9, color: 'rgba(200,180,150,.32)', letterSpacing: '.08em', textTransform: 'uppercase', textAlign: 'center' }}>
-          AI group {groupId + 1}
-        </div>
-      )}
+      <div aria-hidden={!highlighted} style={{ visibility: highlighted ? 'visible' : 'hidden', minHeight: 11, fontSize: 9, color: 'rgba(200,180,150,.32)', letterSpacing: '.08em', textTransform: 'uppercase', textAlign: 'center' }}>
+        {groupId !== null ? `AI group ${groupId + 1}` : '\u00a0'}
+      </div>
     </div>
   );
 }
@@ -336,7 +334,9 @@ export default function AlignedStreams({
   loadingAlignment,
   sourceNotes,
 }: AlignedStreamsProps) {
-  const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
+  // Track the word, not a transient group ID: links may arrive while the mouse
+  // is stationary, or group IDs may change when an old cache is upgraded.
+  const [hoveredWord, setHoveredWord] = useState<{ tradition: keyof Traditions; index: number } | null>(null);
 
   // Pre-compute group ID for each word in each tradition
   const groupByIdx = useMemo(() => {
@@ -348,13 +348,16 @@ export default function AlignedStreams({
 
     groups.forEach((g, gid) => {
       if (g.sp != null) sp.set(g.sp, gid);
-      if (g.lxx !== null) lxx.set(g.lxx, gid);
-      if (g.mt  !== null) { mt.set(g.mt, gid); dss.set(g.mt, gid); }
-      if (g.vul !== null) vul.set(g.vul, gid);
+      if (g.lxx != null) lxx.set(g.lxx, gid);
+      if (g.mt  != null) { mt.set(g.mt, gid); dss.set(g.mt, gid); }
+      if (g.vul != null) vul.set(g.vul, gid);
     });
 
     return { sp, dss, lxx, mt, vul };
   }, [groups]);
+  const hoveredGroup = hoveredWord
+    ? groupByIdx[hoveredWord.tradition].get(hoveredWord.index) ?? null
+    : null;
 
   const colWords = {
     sp: traditions.sp,
@@ -383,7 +386,7 @@ export default function AlignedStreams({
         </p>
         {loadingAlignment && (
           <p style={{ fontSize: 11, color: 'rgba(200,180,150,.3)', fontStyle: 'italic', margin: 0 }}>
-            Computing alignment — hover highlighting will activate shortly…
+            {groups.length > 0 ? 'Hover over linked words while the remaining matches load.' : 'The text is ready. Corresponding words will light up as matches arrive.'}
           </p>
         )}
       </div>
@@ -468,7 +471,7 @@ export default function AlignedStreams({
                     isHebrew={col.isHebrew}
                     groupId={groupId}
                     hoveredGroup={hoveredGroup}
-                    onHover={setHoveredGroup}
+                    onHover={active => setHoveredWord(active ? { tradition: col.key, index: idx } : null)}
                     frag={col.key === 'dss' ? (w as DSSEntry).frag : undefined}
                     status={col.key === 'dss' ? (w as DSSEntry).status : undefined}
                     paleo={col.key === 'dss' ? (w as DSSEntry).paleo : undefined}

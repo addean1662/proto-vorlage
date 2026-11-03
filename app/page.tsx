@@ -193,6 +193,7 @@ export default function Home() {
 
           if (event === 'cached') {
             setDisplayData(d.data as VerseData);
+            setAlignmentLoading(false);
             setFromCache(true);
             setCacheStored(true);
             setIsComplete(true);
@@ -226,6 +227,13 @@ export default function Home() {
             });
           }
 
+          if (event === 'alignment') {
+            setDisplayData(prev => prev && isNewFormat(prev)
+              ? { ...prev, groups: d.groups as AlignmentGroup[] }
+              : prev);
+            setAlignmentLoading(d.complete !== true);
+          }
+
           // Old format: progressive row streaming (legacy cache entries)
           if (event === 'row') {
             setDisplayData(prev => {
@@ -255,6 +263,7 @@ export default function Home() {
           if (event === 'error') {
             const msg = d.message as string;
             setError(msg === 'rate_limited' ? 'rate_limited' : msg);
+            setAlignmentLoading(false);
             setLoading(false);
             if (elapsedIntervalRef.current) { clearInterval(elapsedIntervalRef.current); elapsedIntervalRef.current = null; }
           }
@@ -263,6 +272,7 @@ export default function Home() {
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
       setError((err instanceof Error) ? err.message : String(err));
+      setAlignmentLoading(false);
       setLoading(false);
       if (elapsedIntervalRef.current) { clearInterval(elapsedIntervalRef.current); elapsedIntervalRef.current = null; }
     }
