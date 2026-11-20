@@ -1,6 +1,15 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      { source: '/Bible_Evidence', destination: '/Bible_Evidence/timeline.html' },
+      ...['timeline', 'map', 'discovery', 'gallery'].map(page => ({
+        source: `/Bible_Evidence/${page}`,
+        destination: `/Bible_Evidence/${page}.html`,
+      })),
+    ];
+  },
   // Exclude build-time-only data files from serverless function bundles.
   // These are only used by scripts/ at build time — not at runtime.
   outputFileTracingExcludes: {

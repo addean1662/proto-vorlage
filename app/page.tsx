@@ -300,6 +300,10 @@ export default function Home() {
               Genesis · Exodus · Leviticus · Numbers · Deuteronomy
             </p>
             <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 18 }}>
+              {/* The collection is a self-contained static page with its own navigation. */}
+              <a href="/Bible_Evidence" style={{ fontSize: 14, color: '#d4c198', textDecoration: 'none' }}>
+                Bible_Evidence
+              </a>
               <Link href="/samaritan-pentateuch" style={{ fontSize: 11, color: '#b6a0d4', letterSpacing: '.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
                 Samaritan Pentateuch →
               </Link>

@@ -1,0 +1,201 @@
+{
+  "collection": "Bible_Evidence",
+  "mountPath": "/Bible_Evidence",
+  "sourceCommit": "a19fbcbd6b997e633bf2bd36269526a89515347f",
+  "importedAt": "2026-11-20T20:36:11.394Z",
+  "counts": {
+    "dataPoints": 1399,
+    "geographyEntries": 1285,
+    "sourceDocuments": 1461
+  },
+  "adaptations": [
+    "ProtoVorlage branding and local navigation",
+    "Collection-prefixed asset, data, discovery and return URLs"
+  ],
+  "sourceFiles": [
+    {
+      "file": "app.js",
+      "sha256": "e81cdce7a864aef441252d394f9fc93982ff58e4a1e8d8cb9eae6c4a5adfa8ff"
+    },
+    {
+      "file": "assets/image-credits.json",
+      "sha256": "896a18e652a9fedb80073e5dfd55e45456a331660d96a3bc8f3b4f66e54e8a3a"
+    },
+    {
+      "file": "assets/isaiah-scroll.jpg",
+      "sha256": "77ab868b91fe5ab8febdc571e0eba88df418c807ebc228b27157cf6ef5401765"
+    },
+    {
+      "file": "assets/ketef-hinnom.jpg",
+      "sha256": "c85d9071158ba7e8976e3d0e537b3db90b58b464ddaba5bd6af319abcf74f7c6"
+    },
+    {
+      "file": "assets/lachish-relief.jpg",
+      "sha256": "e10ff4ab898b9d7b48ba257a8c2d432b09686ce0c7fb26b36e005163a2c6394a"
+    },
+    {
+      "file": "assets/map/asset-provenance.json",
+      "sha256": "1ec1571d3d48e81e54d9b2bfd2dea9b712f1119892b4233d9305b9b5660c1c72"
+    },
+    {
+      "file": "assets/map/AWMC-LICENSE.txt",
+      "sha256": "d9685b90fa7d223f5cb0e7f57d00d5b63de69638c9de0340be2e7cf4dc6ecab3"
+    },
+    {
+      "file": "assets/map/CLIOPATRIA-LICENSE.md",
+      "sha256": "62ca7e92dee4ebe402372d5e64f87845de445a6c0e5d76fddb68b3e33739d1a6"
+    },
+    {
+      "file": "assets/map/country-labels.json",
+      "sha256": "c5af0ea5af517efa3aa0c5db0b2c3acad88f4a25b3997e1544441b352e8228a8"
+    },
+    {
+      "file": "assets/map/detailed-land.geojson",
+      "sha256": "67e17a9cc94c08b12f6ad3ec5c0fbac25c6ffe0870a16b353bf1b50ca3b8e953"
+    },
+    {
+      "file": "assets/map/modern-boundaries.geojson",
+      "sha256": "76f444fa822108d00b5175468671e092ce8cd56ee7b77500e9770d2acf745757"
+    },
+    {
+      "file": "assets/map/period-byzantine.geojson",
+      "sha256": "43a7d877457cc59c0a1b64bdb71ec9a757e31fe61b765cb2c202c254c6032f6f"
+    },
+    {
+      "file": "assets/map/period-canaan.geojson",
+      "sha256": "ff28377432820398918f4bbd2c979c72d95d3ac658f5ab974a777c1bd6e101d3"
+    },
+    {
+      "file": "assets/map/period-first-temple.geojson",
+      "sha256": "c39a09470f3e0b4cddb5b839e0ca826e18b9795716076f12e4a6f052c2f1102c"
+    },
+    {
+      "file": "assets/map/period-ottoman.geojson",
+      "sha256": "e0774356984598b5bdc89738676e91b18c1104562b3bacb9086265ce40c50a69"
+    },
+    {
+      "file": "assets/map/period-pre-wwi.geojson",
+      "sha256": "5b4d2610e67c8392844bd31561deb05ecd102eafcceb8691b89dce4bdbe3b7b0"
+    },
+    {
+      "file": "assets/map/period-provenance.json",
+      "sha256": "9951458b4cd6df4b9ffce968f0117d72721478331c6b87eb3a99f53dfe86618a"
+    },
+    {
+      "file": "assets/map/period-second-temple.geojson",
+      "sha256": "a16339dee797b5a9686453a5d5473f516c93c67c823544865ee963cb3f4a51d7"
+    },
+    {
+      "file": "assets/map/roman-boundaries-200.geojson",
+      "sha256": "705a078d41f2b03942bb6f94b9601876072ba5871dbd5a7be3516e81e986ca25"
+    },
+    {
+      "file": "assets/map/roman-extent-200.geojson",
+      "sha256": "72b695e3bdffd6106c379cd7b4ab490b1e94c70c0456d90f16e69cfd8e5a2b47"
+    },
+    {
+      "file": "assets/map/waters.geojson",
+      "sha256": "7d261a5750aa322bc9f32325083b67a0e67d1154b60d63faea3a67545c1e48c2"
+    },
+    {
+      "file": "assets/map/world-land.geojson",
+      "sha256": "412d2319c4b636ac4628ff28f267ddc147abf3efb40a353e7a89b23102c306e5"
+    },
+    {
+      "file": "assets/pilate-stone.jpg",
+      "sha256": "80c9ac1fa2218093813af1fa99d62c7be4a938a1ec6595159265471b3897ce2b"
+    },
+    {
+      "file": "assets/taylor-prism.jpg",
+      "sha256": "e69d08474551495215468dd388932f6a621a06b7133f60562b2107b6490ed7b8"
+    },
+    {
+      "file": "assets/tel-dan.jpg",
+      "sha256": "1e809f3839e4eedb38b5e341d6cba7ac6a21924fa112e60a2553fd5dec196014"
+    },
+    {
+      "file": "assets/vendor/leaflet-LICENSE.txt",
+      "sha256": "53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb"
+    },
+    {
+      "file": "assets/vendor/leaflet.css",
+      "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6"
+    },
+    {
+      "file": "assets/vendor/leaflet.js",
+      "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+    },
+    {
+      "file": "assets/vendor/leaflet.markercluster.js",
+      "sha256": "1e4e1d22972a3926f48598e0caf14e3fe7049835d428a344fed4f9e3665b3508"
+    },
+    {
+      "file": "assets/vendor/markercluster-LICENSE.txt",
+      "sha256": "3133dacd38250bd1f524d8166cc60a016a382522e062fce143691c65bf5e4b3d"
+    },
+    {
+      "file": "assets/vendor/MarkerCluster.css",
+      "sha256": "614dea0a98ff3f4ead74f04918f6b1d1b9ba435c25b5fc23b21a394d1e3e4d87"
+    },
+    {
+      "file": "data.js",
+      "sha256": "ddf628d923020f5d6835a16e2f76fbb6ef5f448372f6e91689a42effb598f477"
+    },
+    {
+      "file": "discovery.html",
+      "sha256": "bee028e472a914295a5f6b8ac909969c2b56eee26f74b91ca9500cc25d41d473"
+    },
+    {
+      "file": "discovery.js",
+      "sha256": "f44bda0fb5be18309659e69bd2de6c4979df459e02d389d5ea5d8a300910f325"
+    },
+    {
+      "file": "gallery.html",
+      "sha256": "7ef9905f3b07cdc71260a9342eccb7c08e53abf2c87bb87dd5ef9648695d8154"
+    },
+    {
+      "file": "index.html",
+      "sha256": "2a5cfeda7a80659c2823856a6e07f69f79c91b096678ddd7b57642ff4ad04168"
+    },
+    {
+      "file": "map-data.json",
+      "sha256": "46788183d425c68abf57e1e734b47e67f9ca0f9cdadbc72782f98aff27bda8cf"
+    },
+    {
+      "file": "map.css",
+      "sha256": "57329aa697f8c37ae505c7c48355ba6601a437c12cede4db094eb27b49fcaf7e"
+    },
+    {
+      "file": "map.html",
+      "sha256": "16611c0a31a5749cd5c659457e5fd1a833b147f89dc3dec735bc45de33ab7ca6"
+    },
+    {
+      "file": "map.js",
+      "sha256": "30773b58bf5cf69dcf8841e844437a2075a6b648bd4961a7b9f920511ff3da8a"
+    },
+    {
+      "file": "reference-common.js",
+      "sha256": "0cafe44b438bf3c3919912b9d349697d24b84fd6d41f58c36a4e2a5672a075a9"
+    },
+    {
+      "file": "reference-data.json",
+      "sha256": "c6c8b90940510394a608de7271e3b66351790addc558af50e15ad36d9e7b274c"
+    },
+    {
+      "file": "reference.css",
+      "sha256": "250944a07eea26b30aa563f780fa212fb566ea071fbde91f5beadb572252dd5c"
+    },
+    {
+      "file": "reference.js",
+      "sha256": "4d76d5e7b35b6640e0ee2cc55fa40c727d933214102c667c5ca82b5b72df7e60"
+    },
+    {
+      "file": "styles.css",
+      "sha256": "60a37e965d7e0f72cdb33191a46472d42b6c6170a903c358ee09263ca96a1863"
+    },
+    {
+      "file": "timeline.html",
+      "sha256": "2a5cfeda7a80659c2823856a6e07f69f79c91b096678ddd7b57642ff4ad04168"
+    }
+  ]
+}
