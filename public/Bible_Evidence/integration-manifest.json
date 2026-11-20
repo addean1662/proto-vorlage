@@ -10,7 +10,8 @@
   },
   "adaptations": [
     "ProtoVorlage branding and local navigation",
-    "Collection-prefixed asset, data, discovery and return URLs"
+    "Collection-prefixed asset, data, discovery and return URLs",
+    "Local compact timeline with Overview, Discoveries and Passages zoom levels"
   ],
   "sourceFiles": [
     {
@@ -196,6 +197,24 @@
     {
       "file": "timeline.html",
       "sha256": "2a5cfeda7a80659c2823856a6e07f69f79c91b096678ddd7b57642ff4ad04168"
+    }
+  ],
+  "localPresentation": [
+    {
+      "file": "index.html",
+      "sha256": "8b420a89702bd47ab11239e79c333a5e4901ba89d758a013c74cf03ae7e4d753"
+    },
+    {
+      "file": "timeline.html",
+      "sha256": "8b420a89702bd47ab11239e79c333a5e4901ba89d758a013c74cf03ae7e4d753"
+    },
+    {
+      "file": "reference.js",
+      "sha256": "ae91d717b2c347365c3a7b55445c9a9d92d52e85e921d33f47ad33c43900822a"
+    },
+    {
+      "file": "timeline.css",
+      "sha256": "85ac52bf888fc4a607cf85b43ff57ef7c07cd9b876d18fde1e8ae0fa038dea07"
     }
   ]
 }
