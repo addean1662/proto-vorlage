@@ -15,7 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
     "@upstash/redis": "^1.37.0",
-    "next": "^16.2.10",
+    "next": "^16.4.6",
     "openai": "^6.45.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
@@ -28,7 +28,7 @@
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.10",
+    "eslint-config-next": "^16.4.6",
     "minimatch": "file:vendor/minimatch-compat",
     "postcss": "^8.5.16",
     "tailwindcss": "^3.4.0",
