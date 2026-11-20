@@ -1,6 +1,6 @@
 // Import the standalone, already-built collection into ProtoVorlage's URL space.
 // Usage: node scripts/sync-bible-evidence.mjs <text-and-stone checkout>
-import { readFile, writeFile, mkdir, readdir, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, copyFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -12,6 +12,10 @@ const sourceRoot = path.resolve(process.argv[2]);
 const source = path.join(sourceRoot, 'dist');
 const target = path.join(root, 'public', 'Bible_Evidence');
 const prefix = '/Bible_Evidence';
+// The compact ProtoVorlage timeline is maintained here. Keep those files when
+// refreshing the upstream collection; records, maps and discovery pages still sync.
+const localPresentation = ['index.html', 'timeline.html', 'reference.js', 'timeline.css'];
+for (const name of localPresentation) await access(path.join(target, name));
 const reference = JSON.parse(await readFile(path.join(source, 'reference-data.json'), 'utf8'));
 const geography = reference.nodes.filter(node => node.geography);
 if (reference.nodes.length !== 1399 || geography.length !== 1285) throw new Error('Review changed collection counts before importing.');
@@ -24,7 +28,7 @@ async function copyDirectory(directory, relative = '') {
     if (entry.isDirectory()) { await copyDirectory(path.join(directory, entry.name), name); continue; }
     if (!entry.isFile()) throw new Error(`Unsupported source entry: ${name}`);
     const original = await readFile(path.join(directory, entry.name));
-    await copyFile(path.join(directory, entry.name), path.join(target, name));
+    if (!localPresentation.includes(name)) await copyFile(path.join(directory, entry.name), path.join(target, name));
     files.push({ file: name, sha256: createHash('sha256').update(original).digest('hex') });
   }
 }
@@ -62,7 +66,8 @@ const manifest = {
   sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: sourceRoot, encoding: 'utf8' }).trim(),
   importedAt: new Date().toISOString(),
   counts: { dataPoints: reference.nodes.length, geographyEntries: geography.length, sourceDocuments: reference.sources.length },
-  adaptations: ['ProtoVorlage branding and local navigation', 'Collection-prefixed asset, data, discovery and return URLs'],
+  adaptations: ['ProtoVorlage branding and local navigation', 'Collection-prefixed asset, data, discovery and return URLs', 'Local compact timeline with Overview, Discoveries and Passages zoom levels'],
+  localPresentation: await Promise.all(localPresentation.map(async name => ({ file: name, sha256: createHash('sha256').update(await readFile(path.join(target, name))).digest('hex') }))),
   sourceFiles: files,
 };
 await writeFile(path.join(target, 'integration-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

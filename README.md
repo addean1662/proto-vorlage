@@ -18,6 +18,8 @@ The Bible evidence collection is temporarily hosted at `/Bible_Evidence`, with a
 
 The collection is served directly from `public/Bible_Evidence` through local Next.js rewrites; it does not require the separate Sites host or an iframe. HTML resources, data requests, discovery links and return navigation stay under `/Bible_Evidence`. The collection's brand links back to the ProtoVorlage home page.
 
+The timeline opens in a dense Overview, with Discoveries and Passages controls for progressive detail. Selecting a book opens its compact discovery tiles; point links retain the selected view and return location. `index.html`, `timeline.html`, `reference.js` and `timeline.css` in `public/Bible_Evidence` are maintained locally and preserved by the import script. Shared styles, detail pages, maps and the dataset continue to refresh from the standalone collection. The import manifest records both upstream hashes and local presentation hashes.
+
 To refresh from its source checkout, run `node scripts/sync-bible-evidence.mjs <text-and-stone-checkout>`. The importer preserves dataset contents, image credits, map provenance and licenses, and records the source commit/file hashes in `integration-manifest.json`. Review changes before importing a snapshot with different record counts. Imported static code is excluded from React/TypeScript linting; check its syntax and complete timeline–detail–map navigation when refreshing.
 
 ## Stack

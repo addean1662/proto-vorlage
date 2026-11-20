@@ -1,6 +1,6 @@
 import {escape,sourceLink,pointUrl,quoteMarkup,loadData} from './reference-common.js';
 const $=selector=>document.querySelector(selector);
-const state={view:'timeline',query:'',book:'all',stage:'all',expanded:false,openBooks:new Set(),showEmpty:false,bookLimits:new Map(),sourceLimit:60};
+const state={view:'timeline',zoom:'overview',query:'',book:'all',stage:'all',showEmpty:false,bookLimits:new Map(),sourceLimit:60};
 let data,nodesById,sourcesById,searchIndex,bookSets;
 const normalize=value=>String(value).normalize('NFD').replace(/\p{M}/gu,'').toLocaleLowerCase().replace(/[–—]/g,'-');
 function readUrl(){
@@ -8,13 +8,13 @@ function readUrl(){
   state.view=p.get('view')==='sources'?'sources':'timeline';state.query=p.get('query')||'';
   state.book=data.books.some(b=>b.title===p.get('book'))?p.get('book'):'all';
   state.stage=data.stages.some(s=>s.id===p.get('stage'))?p.get('stage'):'all';
-  state.expanded=p.get('expand')==='all';state.openBooks=new Set((p.get('expanded')||'').split(',').filter(Boolean));state.showEmpty=p.get('empty')==='show';
+  state.zoom=['overview','discoveries','passages'].includes(p.get('zoom'))?p.get('zoom'):(p.get('expand')==='all'?'passages':state.book!=='all'?'discoveries':'overview');state.showEmpty=p.get('empty')==='show';
   state.bookLimits=new Map((p.get('shown')||'').split(',').map(value=>value.split(':')).filter(([id,count])=>data.books.some(b=>b.id===id)&&/^\d+$/.test(count)).map(([id,count])=>[id,Math.min(Number(count),data.nodes.length)]));
   $('#research-search').value=state.query;$('#book-filter').value=state.book;$('#show-empty').checked=state.showEmpty;
 }
 function syncUrl(){
-  const url=new URL(location.href);for(const key of ['evidence','kind'])url.searchParams.delete(key);
-  for(const [key,value,baseline] of [['view',state.view,'timeline'],['query',state.query,''],['book',state.book,'all'],['stage',state.stage,'all'],['expand',state.expanded?'all':'',''],['expanded',[...state.openBooks].join(','),''],['empty',state.showEmpty?'show':'','']])value===baseline?url.searchParams.delete(key):url.searchParams.set(key,value);
+  const url=new URL(location.href);for(const key of ['evidence','kind','expand','expanded'])url.searchParams.delete(key);
+  for(const [key,value,baseline] of [['view',state.view,'timeline'],['zoom',state.zoom,state.book==='all'?'overview':''],['query',state.query,''],['book',state.book,'all'],['stage',state.stage,'all'],['empty',state.showEmpty?'show':'','']])value===baseline?url.searchParams.delete(key):url.searchParams.set(key,value);
   const shown=[...state.bookLimits].map(([id,count])=>`${id}:${count}`).join(',');if(shown)url.searchParams.set('shown',shown);else url.searchParams.delete('shown');history.replaceState(null,'',url);
 }
 function nodeMatches(node,ignoreBook=false){
@@ -26,13 +26,17 @@ function nodeMatches(node,ignoreBook=false){
 function fromBook(book){const url=new URL(location.href);url.hash=`book-${book.id}`;return `${url.pathname}${url.search}${url.hash}`;}
 function tile(node,book){
   const quote=node.quotes.find(q=>q.book===book.title);
-  return `<article class="discovery-tile"><a class="tile-link" href="${escape(pointUrl(node.id,book.title,fromBook(book)))}" aria-labelledby="tile-${book.id}-${node.id}">${node.image?`<div class="tile-image"><img src="/Bible_Evidence/assets/${escape(node.image)}" alt="${escape(node.title)}" loading="lazy"></div>`:''}<div class="tile-body"><p class="tile-date">${escape(node.geography&&!node.startYear?book.periodLabel:node.dateLabel)}</p><h3 id="tile-${book.id}-${node.id}">${escape(node.title)}</h3>${quoteMarkup(quote)}${node.geography&&quote.editorialNote?.startsWith('OpenBible indexes')?'<p class="quotation-note">The indexed name varies by translation. See passage notes.</p>':''}<p class="tile-summary">${escape(node.summary)}</p><span class="tile-open">Explore this data point <span aria-hidden="true">+</span></span></div></a></article>`;
+  const date=node.geography&&!node.startYear?'':node.dateLabel;
+  if(state.zoom==='overview')return `<a class="overview-point" href="${escape(pointUrl(node.id,book.title,fromBook(book)))}" title="${escape(node.title)}"><strong>${escape(node.title)}</strong><span title="${escape(quote.reference)}${date?` · ${escape(date)}`:''}">${escape(quote.reference)}${date?` · ${escape(date)}`:''}</span></a>`;
+  return `<article class="discovery-tile"><a class="tile-link" href="${escape(pointUrl(node.id,book.title,fromBook(book)))}" aria-labelledby="tile-${book.id}-${node.id}">${state.zoom==='passages'&&node.image?`<div class="tile-image"><img src="/Bible_Evidence/assets/${escape(node.image)}" alt="${escape(node.title)}" loading="lazy"></div>`:''}<div class="tile-body">${date?`<p class="tile-date">${escape(date)}</p>`:''}<h3 id="tile-${book.id}-${node.id}">${escape(node.title)}</h3>${state.zoom==='passages'?quoteMarkup(quote):`<p class="tile-reference">${escape(quote.reference)}</p>`}${state.zoom==='passages'?`${node.geography&&quote.editorialNote?.startsWith('OpenBible indexes')?'<p class="quotation-note">The indexed name varies by translation. See passage notes.</p>':''}<p class="tile-summary">${escape(node.summary)}</p>`:''}</div></a></article>`;
 }
 function renderBooks(visible){
   const books=data.books.filter(b=>(state.book==='all'||state.book===b.title)&&(state.stage==='all'||b.stageIds.includes(state.stage))&&(state.book===b.title||visible.some(n=>n.quotes.some(q=>q.book===b.title))||state.showEmpty&&!state.query));
+  let lastTestament;
   $('#bible-matrix').innerHTML=books.map(book=>{
-    const nodes=visible.filter(n=>bookSets.get(n.id).has(book.title)),expanded=state.expanded||state.openBooks.has(book.id)||state.book!=='all',limit=state.bookLimits.get(book.id)||(expanded?24:4),shown=nodes.slice(0,limit);
-    return `<section class="book-section" id="book-${book.id}" aria-labelledby="book-title-${book.id}"><header class="book-heading"><div class="book-heading-main"><p class="book-testament">${book.order<=39?'HEBREW BIBLE / OLD TESTAMENT':'NEW TESTAMENT'}</p><h2 id="book-title-${book.id}">${escape(book.title)}</h2><p class="book-summary">${escape(book.summary)}</p></div><div class="book-period"><span>PERIOD COVERED</span><p>${escape(book.periodLabel)}</p><details><summary>About this period</summary><p>${escape(book.periodNote)}</p>${book.sources.map(s=>`<div>${sourceLink(s)}</div>`).join('')}</details></div></header><div class="book-count"><span>${nodes.length} connected ${nodes.length===1?'data point':'data points'}</span>${nodes.length>4&&state.book==='all'?`<button data-expand="${book.id}" aria-expanded="${expanded}">${expanded?'Show fewer tiles':'Show more tiles'}</button>`:''}</div><div class="discovery-tiles">${shown.map(n=>tile(n,book)).join('')||(state.query?'<p class="book-empty">No discoveries in this book match the current search. Try another term or reset the filters.</p>':'<p class="book-empty">This book is on the timeline. Discovery tiles will appear here as passages are connected to new data points.</p>')}</div>${nodes.length>shown.length?`<button class="book-more" data-load="${book.id}" data-limit="${limit+24}">Show ${Math.min(24,nodes.length-shown.length)} more · ${shown.length} of ${nodes.length} shown</button>`:''}</section>`;
+    const nodes=visible.filter(n=>bookSets.get(n.id).has(book.title)),limit=state.zoom==='overview'?4:(state.bookLimits.get(book.id)||(state.book!=='all'?24:4)),shown=nodes.slice(0,limit);
+    const testament=book.order<=39?'HEBREW BIBLE / OLD TESTAMENT':'NEW TESTAMENT',marker=testament!==lastTestament?`<h2 class="testament-marker">${testament}</h2>`:'';lastTestament=testament;
+    return `${marker}<section class="book-section" data-view="${state.zoom}" id="book-${book.id}" aria-labelledby="book-title-${book.id}"><header class="book-heading"><div class="book-heading-main"><h2 id="book-title-${book.id}"><button class="book-focus" data-book="${escape(book.title)}" aria-label="Explore ${escape(book.title)}">${escape(book.title)}</button></h2><button class="book-total" data-book="${escape(book.title)}" aria-label="Explore all ${nodes.length} data points in ${escape(book.title)}">${nodes.length.toLocaleString()} ${nodes.length===1?'point':'points'}</button></div><div class="book-period"><p>${escape(book.periodLabel)}</p><details><summary>About this period</summary><p>${escape(book.periodNote)}</p>${book.sources.map(s=>`<div>${sourceLink(s)}</div>`).join('')}</details></div></header>${state.zoom!=='overview'&&state.book!=='all'?`<details class="book-context"><summary>Book context</summary><p>${escape(book.summary)}</p></details>`:''}<div class="${state.zoom==='overview'?'overview-points':'discovery-tiles'}">${shown.map(n=>tile(n,book)).join('')||'<p class="book-empty">No connected points in this view.</p>'}</div>${state.zoom!=='overview'&&nodes.length>shown.length?`<button class="book-more" data-load="${book.id}" data-limit="${limit+24}">Show ${Math.min(24,nodes.length-shown.length)} more · ${shown.length} of ${nodes.length} shown</button>`:''}</section>`;
   }).join('');return books.length;
 }
 function renderSources(visible){
@@ -44,15 +48,16 @@ function renderSources(visible){
 }
 function render(){
   syncUrl();const visible=data.nodes.filter(n=>nodeMatches(n)),allBookMatches=data.nodes.filter(n=>nodeMatches(n,true));
-  $('#book-navigation').innerHTML=data.books.filter(b=>state.showEmpty||allBookMatches.some(n=>n.quotes.some(q=>q.book===b.title))||state.book===b.title).map(b=>{const count=allBookMatches.filter(n=>n.quotes.some(q=>q.book===b.title)).length;return `<button class="stage-filter ${state.book===b.title?'active':''}" data-book="${escape(b.title)}" aria-pressed="${state.book===b.title}"><span>${escape(b.title)}</span><small>${count}</small></button>`;}).join('');
+  $('#book-filter').innerHTML='<option value="all">All books</option>'+data.books.map(b=>{const count=allBookMatches.filter(n=>bookSets.get(n.id).has(b.title)).length;return `<option value="${escape(b.title)}">${escape(b.title)} (${count})</option>`;}).join('');$('#book-filter').value=state.book;
   const count=renderBooks(visible),sourceCount=state.view==='sources'?renderSources(visible):new Set(visible.flatMap(n=>n.sourceIds)).size;
-  $('#timeline-panel').hidden=state.view!=='timeline';$('#sources-panel').hidden=state.view!=='sources';$('#density').hidden=state.view!=='timeline'||state.book!=='all';
-  $('#timeline-view').setAttribute('aria-pressed',state.view==='timeline');$('#sources-view').setAttribute('aria-pressed',state.view==='sources');
-  $('#density').setAttribute('aria-pressed',state.expanded);$('#density').textContent=state.expanded?'Compact tiles':'Show more tiles';
+  $('#timeline-panel').hidden=state.view!=='timeline';$('#sources-panel').hidden=state.view!=='sources';$('#zoom-controls').hidden=state.view!=='timeline';$('.timeline-options').hidden=state.view!=='timeline';
+  $('#timeline-view').hidden=state.view==='timeline';
+  document.body.dataset.zoom=state.zoom;document.querySelectorAll('button[data-zoom]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.zoom===state.zoom));
   $('#research-results').textContent=state.view==='timeline'?`${visible.length.toLocaleString()} data ${visible.length===1?'point':'points'} · ${count} book ${count===1?'section':'sections'}`:`${sourceCount} source documents · ${visible.length.toLocaleString()} data ${visible.length===1?'point':'points'}`;
-  $('#view-note').textContent=state.view==='timeline'?'Book order · historical periods may overlap':'Sources behind the discoveries';$('#research-empty').hidden=count>0;
+  $('#research-results').title=state.view==='timeline'?'Selected points per book. Select a book to explore all its data points. Historical periods may overlap.':'Sources behind the discoveries';$('#research-empty').hidden=count>0;
 }
-function reset(){Object.assign(state,{query:'',book:'all',stage:'all',sourceLimit:60,bookLimits:new Map()});$('#research-search').value='';$('#book-filter').value='all';render();}
+function reset(){Object.assign(state,{query:'',book:'all',stage:'all',zoom:'overview',sourceLimit:60,bookLimits:new Map()});$('#research-search').value='';$('#book-filter').value='all';render();}
+function focusBook(title){state.book=title;state.stage='all';if(state.zoom==='overview'&&title!=='all')state.zoom='discoveries';render();$('.workbench').scrollIntoView({block:'start'});}
 async function init(){
   if(location.hash.startsWith('#discovery/')){location.replace(`/Bible_Evidence/gallery.html${location.hash}`);return;}
   try{
@@ -68,16 +73,16 @@ async function init(){
   }catch(error){$('#research-error').hidden=false;$('#timeline-panel').hidden=true;$('#research-results').textContent='Unable to load the collection';console.error(error);return;}
   let searchTimer;$('#research-search').addEventListener('input',e=>{state.query=e.target.value.trim();state.bookLimits.clear();state.sourceLimit=60;clearTimeout(searchTimer);searchTimer=setTimeout(render,150);});
   $('#source-more').addEventListener('click',()=>{state.sourceLimit+=60;render();});
-  $('#book-filter').addEventListener('change',e=>{state.book=e.target.value;state.stage='all';render();});
+  $('#book-filter').addEventListener('change',e=>focusBook(e.target.value));
   $('#show-empty').addEventListener('change',e=>{state.showEmpty=e.target.checked;render();});
   $('#reset-filters').addEventListener('click',reset);$('#empty-reset').addEventListener('click',reset);
-  $('#timeline-view').addEventListener('click',()=>{state.view='timeline';render();});$('#sources-view').addEventListener('click',()=>{state.view='sources';render();});
+  $('#timeline-view').addEventListener('click',()=>{state.view='timeline';render();});
   $('#header-sources').addEventListener('click',()=>{state.view='sources';render();$('.workbench').scrollIntoView({block:'start'});});
-  $('#density').addEventListener('click',()=>{state.expanded=!state.expanded;state.openBooks.clear();state.bookLimits.clear();render();});
   document.addEventListener('click',e=>{
-    const b=e.target.closest('[data-book]');if(b){state.book=b.dataset.book;state.stage='all';$('#book-filter').value=state.book;render();return;}
-    const load=e.target.closest('[data-load]');if(load){state.bookLimits.set(load.dataset.load,Number(load.dataset.limit));render();return;}
-    const more=e.target.closest('[data-expand]');if(more){const id=more.dataset.expand;state.bookLimits.delete(id);if(state.expanded){state.expanded=false;state.openBooks=new Set(data.books.filter(b=>b.id!==id).map(b=>b.id));}else state.openBooks.has(id)?state.openBooks.delete(id):state.openBooks.add(id);render();}
+    const zoom=e.target.closest('button[data-zoom]');if(zoom){const anchor=scrollY>200?[...document.querySelectorAll('.book-section')].find(section=>section.getBoundingClientRect().bottom>0)?.id:null;state.zoom=zoom.dataset.zoom;render();if(anchor)document.getElementById(anchor)?.scrollIntoView({block:'start'});return;}
+    const jump=e.target.closest('[data-jump]');if(jump){reset();document.getElementById(`book-${jump.dataset.jump}`)?.scrollIntoView({block:'start'});return;}
+    const b=e.target.closest('[data-book]');if(b){focusBook(b.dataset.book);return;}
+    const load=e.target.closest('[data-load]');if(load){const id=load.dataset.load;state.bookLimits.set(id,Number(load.dataset.limit));render();const next=document.querySelector(`[data-load="${id}"]`);if(next)next.focus({preventScroll:true});else document.querySelector(`#book-${id} .book-focus`)?.focus({preventScroll:true});return;}
   });
   window.addEventListener('popstate',()=>{readUrl();render();});
 }
