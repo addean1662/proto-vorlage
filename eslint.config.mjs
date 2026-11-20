@@ -10,6 +10,7 @@ const eslintConfig = [
       '.vercel/**',
       'node_modules/**',
       'data/cache/**',
+      'public/Bible_Evidence/**', // Imported static collection and its vendored map libraries.
       'scripts/**',
       'next-env.d.ts',
     ],

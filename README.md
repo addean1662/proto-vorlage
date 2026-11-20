@@ -12,6 +12,14 @@ Legacy four-tradition cache entries are regenerated on request. No cache is bulk
 
 Live site: https://www.protovorlage.com
 
+## Bible_Evidence
+
+The Bible evidence collection is temporarily hosted at `/Bible_Evidence`, with a link on the home page. It includes the book-by-book timeline, discovery pages, source library, artifact gallery and interactive map with seven historical period choices. All 1,399 data points, including all 1,285 geographic entries, are preserved. The standalone Text & Stone deployment remains available separately.
+
+The collection is served directly from `public/Bible_Evidence` through local Next.js rewrites; it does not require the separate Sites host or an iframe. HTML resources, data requests, discovery links and return navigation stay under `/Bible_Evidence`. The collection's brand links back to the ProtoVorlage home page.
+
+To refresh from its source checkout, run `node scripts/sync-bible-evidence.mjs <text-and-stone-checkout>`. The importer preserves dataset contents, image credits, map provenance and licenses, and records the source commit/file hashes in `integration-manifest.json`. Review changes before importing a snapshot with different record counts. Imported static code is excluded from React/TypeScript linting; check its syntax and complete timeline–detail–map navigation when refreshing.
+
 ## Stack
 
 - Next.js 16 App Router
